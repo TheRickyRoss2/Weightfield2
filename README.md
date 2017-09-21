@@ -3,9 +3,9 @@
 Weightfield2 is a freeware 2D simulator for silicon and diamond detectors
 
 ## Build Status
-| Branch | Continuous | 
-|--------|------------|
-| master |[![Build Status](http://192.168.1.10:8080/buildStatus/icon?job=Weightfield2)](http://192.168.1.10:8080/job/Weightfield2/) | 
+| Branch | Nightly | 
+|--------|---------|
+| master | [![Build Status](http://192.168.1.10:8080/buildStatus/icon?job=Weightfield2)](http://192.168.1.10:8080/job/Weightfield2/) | 
 
 ## Building
 Clone the repo
