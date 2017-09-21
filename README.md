@@ -3,9 +3,9 @@
 Weightfield2 is a freeware 2D simulator for silicon and diamond detectors
 
 ## Build Status
-| Branch | Continuous | Nightly |
-|--------|------------|---------|
-| master | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-incremental-master)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-incremental-master/) | [![Build Status](https://epsft-jenkins.cern.ch/buildStatus/icon?job=root-nightly-master)](https://epsft-jenkins.cern.ch/view/ROOT/job/root-nightly-master/) |
+| Branch | Continuous | 
+|--------|------------|
+| master |[![Build Status](http://192.168.1.10:8080/job/Weightfield2/badge/icon)](http://192.168.1.10:8080/job/Weightfield2/) | 
 
 ## Building
 Clone the repo
@@ -17,5 +17,5 @@ Make weightfield2 and run
     $ make -j8
     $ ./weightfield
     
-- [Tutorials](https://root.cern/doc/master/group__Tutorials.html)
+- [Tutorials](http://personalpages.to.infn.it/~cartigli/Weightfield2/Manual.html)
 
