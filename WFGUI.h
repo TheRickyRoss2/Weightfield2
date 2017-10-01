@@ -126,7 +126,8 @@ class WFGUI : public TGMainFrame {
 		double GainShapeDepth;
 		double GainShapeExp;
 		double GainShapeLength;
-		
+	  std::map<std::string, double> uservalues;
+    int testint;
 		float YGLow;
 		float YGHigh;
 		double angle;
@@ -517,6 +518,7 @@ class WFGUI : public TGMainFrame {
 	TGTextButton *CalculateButton;
 	TGTextButton *SaveButton;
 	TGTextButton *SetButton;
+  TGTextButton *fSaveButton;
 	TGTextButton *StopButton;
 	TGTextButton *ExitButton;
 	TGTextButton *BetweenStripsButton;
@@ -535,6 +537,8 @@ class WFGUI : public TGMainFrame {
 	TGTextButton *FileNameButton;
         TGLabel *FileNameLabel;
 	TGTextEntry *FileNameEntry;
+	TGTextEntry *SaveFileName;
+  string filename;
 	
 	//TGComboBox *SetAlpha;		//!!!! original particle selection
 	TGHorizontalFrame *fSliceExtentL;
@@ -608,7 +612,7 @@ class WFGUI : public TGMainFrame {
 		TGraph *wfieldycut;	// graph for weighting potential cut
 		TGraph *dopdens;	// graph for doping density
 
-		WFGUI(const TGWindow *p,UInt_t w,UInt_t h);	// constructor of GUI
+		WFGUI(const TGWindow *p,UInt_t w,UInt_t h, TApplication *app);	// constructor of GUI
 		int CallSetDetType();				
 		int CallGetDetType();
 		int CallGetDopingBulk();
@@ -641,6 +645,7 @@ class WFGUI : public TGMainFrame {
 		void CallCalculateFields();				// Method to calculate fields
 		void CallCalculateCurrents();				// Method to calculate currents
 		void CloseWindow();						// Method to close window
+    void SaveData();
 		TH2F* Getwhist();						// Method which returns whist
 		TH2F* Getdhist();						// Method which returns dhist
 		TH2F* Getchist();						// Method which returns dhist
