@@ -6,7 +6,6 @@
 #include <stddef.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <math.h>
 #include <string.h>
 #include <assert.h>
 #define G__DICTIONARY
@@ -56,7 +55,7 @@ namespace ROOT {
       static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< ::Potentials >(0);
       static ::ROOT::TGenericClassInfo 
          instance("Potentials", ::Potentials::Class_Version(), "Potentials.h", 27,
-                  typeid(::Potentials), DefineBehavior(ptr, ptr),
+                  typeid(::Potentials), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &::Potentials::Dictionary, isa_proxy, 4,
                   sizeof(::Potentials) );
       instance.SetNew(&new_Potentials);
@@ -71,7 +70,7 @@ namespace ROOT {
       return GenerateInitInstanceLocal((::Potentials*)0);
    }
    // Static variable to force the class initialization
-   static ::ROOT::TGenericClassInfo *_R__UNIQUE_(Init) = GenerateInitInstanceLocal((const ::Potentials*)0x0); R__UseDummy(_R__UNIQUE_(Init));
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const ::Potentials*)0x0); R__UseDummy(_R__UNIQUE_DICT_(Init));
 } // end of namespace ROOT
 
 namespace ROOT {
@@ -88,7 +87,7 @@ namespace ROOT {
       static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< ::Field >(0);
       static ::ROOT::TGenericClassInfo 
          instance("Field", ::Field::Class_Version(), "Field.h", 7,
-                  typeid(::Field), DefineBehavior(ptr, ptr),
+                  typeid(::Field), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &::Field::Dictionary, isa_proxy, 4,
                   sizeof(::Field) );
       instance.SetNew(&new_Field);
@@ -103,7 +102,7 @@ namespace ROOT {
       return GenerateInitInstanceLocal((::Field*)0);
    }
    // Static variable to force the class initialization
-   static ::ROOT::TGenericClassInfo *_R__UNIQUE_(Init) = GenerateInitInstanceLocal((const ::Field*)0x0); R__UseDummy(_R__UNIQUE_(Init));
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const ::Field*)0x0); R__UseDummy(_R__UNIQUE_DICT_(Init));
 } // end of namespace ROOT
 
 namespace ROOT {
@@ -122,7 +121,7 @@ namespace ROOT {
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::Carriers));
       static ::ROOT::TGenericClassInfo 
          instance("Carriers", "Carriers.h", 70,
-                  typeid(::Carriers), DefineBehavior(ptr, ptr),
+                  typeid(::Carriers), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &Carriers_Dictionary, isa_proxy, 4,
                   sizeof(::Carriers) );
       instance.SetNew(&new_Carriers);
@@ -137,7 +136,7 @@ namespace ROOT {
       return GenerateInitInstanceLocal((::Carriers*)0);
    }
    // Static variable to force the class initialization
-   static ::ROOT::TGenericClassInfo *_R__UNIQUE_(Init) = GenerateInitInstanceLocal((const ::Carriers*)0x0); R__UseDummy(_R__UNIQUE_(Init));
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const ::Carriers*)0x0); R__UseDummy(_R__UNIQUE_DICT_(Init));
 
    // Dictionary for non-ClassDef classes
    static TClass *Carriers_Dictionary() {
@@ -163,7 +162,7 @@ namespace ROOT {
       static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< ::WFGUI >(0);
       static ::ROOT::TGenericClassInfo 
          instance("WFGUI", ::WFGUI::Class_Version(), "WFGUI.h", 52,
-                  typeid(::WFGUI), DefineBehavior(ptr, ptr),
+                  typeid(::WFGUI), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &::WFGUI::Dictionary, isa_proxy, 4,
                   sizeof(::WFGUI) );
       instance.SetDelete(&delete_WFGUI);
@@ -176,7 +175,7 @@ namespace ROOT {
       return GenerateInitInstanceLocal((::WFGUI*)0);
    }
    // Static variable to force the class initialization
-   static ::ROOT::TGenericClassInfo *_R__UNIQUE_(Init) = GenerateInitInstanceLocal((const ::WFGUI*)0x0); R__UseDummy(_R__UNIQUE_(Init));
+   static ::ROOT::TGenericClassInfo *_R__UNIQUE_DICT_(Init) = GenerateInitInstanceLocal((const ::WFGUI*)0x0); R__UseDummy(_R__UNIQUE_DICT_(Init));
 } // end of namespace ROOT
 
 //______________________________________________________________________________
@@ -404,22 +403,23 @@ namespace {
 0
     };
     static const char* includePaths[] = {
-"/root/include",
-"/Users/nicolo/work/GruppoV_UFSD/Weightfield_evolution/weightfield4.25/",
+"/usr/local/root/include",
+"/root/Documents/Weightfield2/",
 0
     };
-    static const char* fwdDeclCode = 
-R"DICTFWDDCLS(
+    static const char* fwdDeclCode = R"DICTFWDDCLS(
+#line 1 "Dict dictionary forward declarations' payload"
 #pragma clang diagnostic ignored "-Wkeyword-compat"
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 extern int __Cling_Autoloading_Map;
-class __attribute__((annotate("$clingAutoload$WFGUI.h")))  Potentials;
-class __attribute__((annotate("$clingAutoload$WFGUI.h")))  Field;
-class __attribute__((annotate("$clingAutoload$WFGUI.h")))  Carriers;
-class __attribute__((annotate(R"ATTRDUMP(muss auskommentiert sein wenn .x ... .cxx+)ATTRDUMP"))) __attribute__((annotate(R"ATTRDUMP(muss auskommentiert sein wenn .x ... .cxx+)ATTRDUMP"))) __attribute__((annotate("$clingAutoload$WFGUI.h")))  WFGUI;
+class __attribute__((annotate("$clingAutoload$Potentials.h")))  __attribute__((annotate("$clingAutoload$WFGUI.h")))  Potentials;
+class __attribute__((annotate("$clingAutoload$Field.h")))  __attribute__((annotate("$clingAutoload$WFGUI.h")))  Field;
+class __attribute__((annotate("$clingAutoload$Carriers.h")))  __attribute__((annotate("$clingAutoload$WFGUI.h")))  Carriers;
+class __attribute__((annotate(R"ATTRDUMP(muss auskommentiert sein wenn .x ... .cxx+)ATTRDUMP"))) __attribute__((annotate(R"ATTRDUMP(muss auskommentiert sein wenn .x ... .cxx+)ATTRDUMP"))) __attribute__((annotate(R"ATTRDUMP(muss auskommentiert sein wenn .x ... .cxx+)ATTRDUMP"))) __attribute__((annotate("$clingAutoload$WFGUI.h")))  WFGUI;
 )DICTFWDDCLS";
     static const char* payloadCode = R"DICTPAYLOAD(
+#line 1 "Dict dictionary payload"
 
 #ifndef G__VECTOR_HAS_CLASS_ITERATOR
   #define G__VECTOR_HAS_CLASS_ITERATOR 1

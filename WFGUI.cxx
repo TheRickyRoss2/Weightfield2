@@ -8,10 +8,10 @@
 
 ///-----------------------------------------------------\\ VARIABLES INITIAL VALUES //-------------------------------------------------------------///
 
-std::map<std::string, double> GetParameters(const char* ifname = "parameters.dat")
+std::map<std::string, double> GetParameters(char* ifname)
 {
 	std::map<std::string, double> valueMap;
-
+  //std::cout << "argsSDAF: "<< TApplication::Argv(1) << std::endl;
 	// prepare map
 
 	//#########################	
@@ -102,11 +102,21 @@ std::map<std::string, double> GetParameters(const char* ifname = "parameters.dat
 
 ///------------------------------------------------------------\\ GUI SETUP //--------------------------------------------------------------------///
 
-WFGUI::WFGUI(const TGWindow *p,UInt_t w,UInt_t h): TGMainFrame(p,w,h), dwpot(Potentials(300,1,200,30)) {
+WFGUI::WFGUI(const TGWindow *p,UInt_t w,UInt_t hi, TApplication* app): TGMainFrame(p,w,hi), dwpot(Potentials(300,1,200,30)) {
 
     //take intial varible names from parameters file
-	const char* ifname = "parameters.dat";
+	char *ifname = "parameters.dat";
+  string userFile;
+  if(app->Argc()<2){
+    ifname = "parameters.dat";
+  }else{
+    ifname = app->Argv(1);
+  }
+
 	std::map<std::string, double> valueMap = GetParameters(ifname);
+  uservalues = valueMap;
+  int x=2;
+  testint = x;
 
 	// mainframes initial settings
 	radiobuttonstatus=MIPunif;//radio button mip set as default
@@ -542,12 +552,26 @@ WFGUI::WFGUI(const TGWindow *p,UInt_t w,UInt_t h): TGMainFrame(p,w,h), dwpot(Pot
     CalculateButton = new TGTextButton(ButtonPotFrame,"Currents");
     StopButton = new TGTextButton(ButtonPotFrame," Stop ");
     ExitButton = new TGTextButton(ButtonPotFrame," Exit ");
+    fSaveButton = new TGTextButton(ButtonPotFrame, " Save ");
 
+    SaveFileName = new TGTextEntry(ButtonPotFrame, new TGTextBuffer(5),kSunkenFrame | kDoubleBorder | kOwnBackground);
+
+    //develop entries
+    SaveFileName->SetText("sampleout.dat");
+    SaveFileName->SetMaxLength(4096);
+    SaveFileName->SetAlignment(kTextLeft);
+    //SaveFileName->Resize(104,FileNameEntry->GetDefaultHeight());
+    SaveFileName->MoveResize(40,1,160,15);
+    SaveFileName->SetState(kTRUE);
     //develop entries
     SetButton->Associate(this);
     SetButton->SetTextColor(1,kFALSE);
     SetButton->Connect("Clicked()","WFGUI",this,"CallBoundaryConditions())");//Connect Set Button to CallBoundary Conditions()
     SetButton->SetEnabled(kTRUE);
+    fSaveButton->Associate(this);
+    fSaveButton->SetTextColor(1, kFALSE);
+    fSaveButton->Connect("Clicked()", "WFGUI", this, "SaveData()");
+    fSaveButton->SetEnabled(kTRUE);
     CalcPotButton->SetTextColor(1,kFALSE);
     CalcPotButton->Connect("Clicked()","WFGUI",this,"ThreadstartPotential()");//Connect button with threadstart method
     CalcPotButton->SetEnabled(kTRUE);
@@ -4545,6 +4569,63 @@ void WFGUI::CloseWindow() // Got close message for this MainFrame. Terminates th
 {
   SetStopOn();
   gApplication->Terminate();
+}
+void WFGUI::SaveData()
+{
+  
+  std::cout << "Saving data" << testint << std::endl;
+
+  uservalues["BBBW"] = BBBWEntry->GetNumber();
+  uservalues["BBGAIN"] = BBGainEntry->GetNumber();
+  uservalues["BBVTH"] = BBVthEntry->GetNumber(); 
+  uservalues["BB_IMP"] = BBImpEntry->GetNumber(); 
+  uservalues["BB_NOISE"] = BBNoiseEntry->GetNumber();
+  uservalues["BETA_ELECTRONS"] = IrradiationEntry2->GetNumber(); 
+  uservalues["BETA_HOLES"] = IrradiationEntry3->GetNumber(); 
+  uservalues["BIAS_VOLTAGE"] = Biasentry->GetNumber(); 
+  uservalues["CALIB"] = GetCalibEntry();
+  uservalues["CAPACITANCE"] = CDEntry->GetNumber();
+  uservalues["DEPL_VOLTAGE"] = Depletionentry->GetNumber();
+  uservalues["DETECT_HEIGHT"] = YMAXentry->GetNumber();
+  uservalues["DOP_LEV"] = Dopingentry->GetNumber(); 
+  uservalues["DOUBLEJUNCTION"] = DJEntry->GetNumber(); 
+  uservalues["GAIN_LYR_RSS"] = GainIndententry->GetNumber(); 
+  uservalues["GAIN_SCL"] = Gainentry->GetNumber(); 
+  uservalues["HE_GAIN_RAT"] = 0; 
+  uservalues["IMPEDANCE"] = CSAImpEntry->GetNumber();
+  uservalues["INDUCTANCE"] = LDEntry->GetNumber();
+  uservalues["IRRADIATION"] = IrradiationEntry->GetNumber();
+  uservalues["NA_OVER_ND"] = DJehEntry->GetNumber(); 
+  uservalues["NUMBERP"] = GetNumberP(); 
+  uservalues["OSCOPE_BW"] = OscBWEntry->GetNumber(); 
+  uservalues["PRECISION"] = GetPrecision(); 
+  uservalues["SAMPLING"] = GetSampling(); 
+  uservalues["SET_RANGE"] = 10;
+  uservalues["SHPR_DCY_TIME"] = TFallEntry->GetNumber(); 
+  uservalues["SHPR_INT_TIME"] = TRiseEntry->GetNumber(); 
+  uservalues["SHPR_NOISE"] = ShNoiseEntry->GetNumber(); 
+  uservalues["SHPR_TRANS"] = ShTransEntry->GetNumber(); 
+  uservalues["STEPX"] = StepxEntry->GetNumber(); 
+  uservalues["STEPY"] = StepyEntry->GetNumber(); 
+  uservalues["STRIP_NUMB"] = XMAXentry->GetNumber(); 
+  uservalues["STR_PITCH"] = Pitchentry->GetNumber(); 
+  uservalues["STR_WIDTH"] = Widthentry->GetNumber();
+  uservalues["TEMPERATURE"] = TempEntry->GetNumber(); 
+  uservalues["USERQ"] = 73; 
+  uservalues["VTH"] = CSAVthEntry->GetNumber(); 
+  uservalues["YPOSITION"] = EdgeNumberentry->GetNumber(); 
+
+
+  std::ofstream myfile;
+  string fname = "./";
+  fname+=SaveFileName->GetText();
+  myfile.open(fname, ios::out);
+  for (auto it = uservalues.begin(); it!=uservalues.end(); it++){
+    myfile << it->first << "  " << it->second <<  "\n";
+    myfile.flush();
+  }
+  myfile.flush();
+  myfile.close();
 }
 /////////////////////////////////////////////////////////////////////////////////////////////
 TThread* WFGUI::GetPotentialThread() {
