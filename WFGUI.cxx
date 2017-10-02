@@ -4626,6 +4626,38 @@ void WFGUI::SaveData()
   }
   myfile.flush();
   myfile.close();
+
+  TFile *f = new TFile("potentials.root", "RECREATE");
+  Getcanvasp()->Write("potentials");
+  f->Write();
+  f->Close();
+
+  Getcanvaspc()->cd(1);
+  f = new TFile("potential_currents1.root", "RECREATE");
+  Getcanvaspc()->Write("potential_currents");
+  f->Write();
+  f->Close();
+
+  Getcanvaspc()->cd(2);
+  f = new TFile("potential_currents2.root", "RECREATE");
+  Getcanvaspc()->Write("potential_currents");
+  f->Write();
+  f->Close();
+
+  f = new TFile("weighting.root", "RECREATE");
+  Getcanvasw()->Write("weighting");
+  f->Write();
+  f->Close();
+
+  f = new TFile("currents.root", "RECREATE");
+  Getcurcanvas()->Write("currents");
+  f->Write();
+  f->Close();
+
+  f = new TFile("oscilloscope.root", "RECREATE");
+  Getosccanvas()->Write("oscilloscope");
+  f->Write();
+  f->Close();
 }
 /////////////////////////////////////////////////////////////////////////////////////////////
 TThread* WFGUI::GetPotentialThread() {
