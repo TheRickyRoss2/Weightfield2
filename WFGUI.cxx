@@ -4627,37 +4627,6 @@ void WFGUI::SaveData()
   myfile.flush();
   myfile.close();
 
-  TFile *f = new TFile("potentials.root", "RECREATE");
-  Getcanvasp()->Write("potentials");
-  f->Write();
-  f->Close();
-
-  Getcanvaspc()->cd(1);
-  f = new TFile("potential_currents1.root", "RECREATE");
-  Getcanvaspc()->Write("potential_currents");
-  f->Write();
-  f->Close();
-
-  Getcanvaspc()->cd(2);
-  f = new TFile("potential_currents2.root", "RECREATE");
-  Getcanvaspc()->Write("potential_currents");
-  f->Write();
-  f->Close();
-
-  f = new TFile("weighting.root", "RECREATE");
-  Getcanvasw()->Write("weighting");
-  f->Write();
-  f->Close();
-
-  f = new TFile("currents.root", "RECREATE");
-  Getcurcanvas()->Write("currents");
-  f->Write();
-  f->Close();
-
-  f = new TFile("oscilloscope.root", "RECREATE");
-  Getosccanvas()->Write("oscilloscope");
-  f->Write();
-  f->Close();
 }
 /////////////////////////////////////////////////////////////////////////////////////////////
 TThread* WFGUI::GetPotentialThread() {
@@ -4701,7 +4670,16 @@ void* WFGUI::StartPotentialCalcTh(void* arg)
 	
 	gui->CalculatingLabel->SetBackgroundColor(0x00ff00);	// when calculation completed, set progress label color to green
 	gui->CalculatingLabel->SetTitle("Done");
-	
+
+  TFile *f = new TFile("potentials.root", "RECREATE");
+  gui->Getcanvasp()->Write("potentials");
+  gui->Getcanvaspc()->cd(1);
+  gui->Getcanvaspc()->Write("eh_pairs");
+  gui->Getcanvaspc()->cd(2);
+  gui->Getcanvaspc()->Write("potential_currents");
+  gui->Getcanvasw()->Write("weighting");
+  f->Write();
+  f->Close();
 	return NULL;	
 }
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -4743,6 +4721,11 @@ void* WFGUI::StartCurrentsCalcTh(void* arg)
 	gui->CallCalculateCurrents();
 	gui->ThreadstopCurrents();
 	gui->stopped=false;
+  TFile *f = new TFile("currents.root", "RECREATE");
+  gui->Getcurcanvas()->Write("currents");
+  gui->Getosccanvas()->Write("oscilloscope");
+  f->Write();
+  f->Close();
 	return NULL;	
 }
 /////////////////////////////////////////////////////////////////////////////////////////////
