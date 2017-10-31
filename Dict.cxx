@@ -403,8 +403,8 @@ namespace {
 0
     };
     static const char* includePaths[] = {
-"/usr/local/root/include",
-"/root/Documents/Weightfield2/",
+"/usr/local/Cellar/root/6.10.06/include/root",
+"/Users/Home/Downloads/Weightfield2/",
 0
     };
     static const char* fwdDeclCode = R"DICTFWDDCLS(
