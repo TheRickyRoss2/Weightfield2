@@ -115,8 +115,6 @@ WFGUI::WFGUI(const TGWindow *p,UInt_t w,UInt_t hi, TApplication* app): TGMainFra
 
 	std::map<std::string, double> valueMap = GetParameters(ifname);
   uservalues = valueMap;
-  int x=2;
-  testint = x;
 
 	// mainframes initial settings
 	radiobuttonstatus=MIPunif;//radio button mip set as default

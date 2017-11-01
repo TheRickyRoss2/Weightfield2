@@ -1,6 +1,6 @@
 #define CATCH_CONFIG_MAIN
 #include "catch.hpp"
-#include "Field.h"
+#include <Field.h>
 
 TEST_CASE("INIT FIELD", "[field]"){
     Field *f;

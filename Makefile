@@ -14,6 +14,6 @@ debug: WFGUI.h WFGUI.cxx Potentials.h Potentials.cxx Field.h Field.cxx Carriers.
 clean:
 	rm -rf weightfield
 test:
-	g++ -Wall -Wextra -o catcher WFGUI.cxx Potentials.cxx Field.cxx Carriers.cxx `root-config --cflags --glibs` Dict.cxx tb_main.cpp  && ./catcher
+	g++ -Wall -Wextra -o tests/catcher WFGUI.cxx Potentials.cxx Field.cxx Carriers.cxx `root-config --cflags --glibs` Dict.cxx -I./ tests/tb_main.cpp  && tests/catcher
 
 
