@@ -473,7 +473,7 @@ void Potentials::Iteration(void *wfgui)	//
 }
 
 //////////////////////////////////////////////////////////////////////
-void Potentials::SetDopingProfile(void *wfgui)	// 
+void Potentials::SetDopingProfile(void *wfgui, int rflag)	// 
 {				// method to set the doping profile in dopyx
   //int r=1;
 
@@ -510,9 +510,11 @@ void Potentials::SetDopingProfile(void *wfgui)	//
   
   poissonf=((bulk==PTYPE) ? -1.0 : 1.0)*(2.0*vdepl)/(dist*dist*1e-12);	 // right side of Poisson equation => Q/epsilon =  eN/epsilon, this is in 1/m^3 
   poissondens=((bulk==PTYPE) ? -1.0 : 1.0)*(2.0*30)/(dist*dist*1e-12);	 //  Vdepl = 30 V ==> Density for 10 kOhm*cm ==>P-doping= 4.5*10^11 n/m^3
+
+  vdepl_irr =  (poissonf)*dist*dist*1e-12/2.;
+  if (rflag ==0)  cout  << "Bulk doping = "<< setprecision(2) <<  (poissonf)*(EPSILON*EPSILONR)/ECHARGE*1e-6<< "[N/cm^3]; V depletion = " <<  vdepl_irr  <<" [V]; " <<endl;
   
-  
-  if (  gui->GetAcceptorCreation())  Acceptorpoissonf =  -gfluence*gui->GetFluence()*1e6*ECHARGE/(EPSILON*EPSILONR); //always p-type, NEGATIVE
+  if (  gui->GetAcceptorCreation() )  Acceptorpoissonf =  -gfluence*gui->GetFluence()*1e6*ECHARGE/(EPSILON*EPSILONR); //always p-type, NEGATIVE
 
   //DopingAdd = gui->GetDopinggainlayerValue()*ECHARGE/(EPSILON*EPSILONR);  
   //  cout << "poissonf = " << poissonf <<  << endl;
@@ -520,71 +522,76 @@ void Potentials::SetDopingProfile(void *wfgui)	//
   // cout  << "DJ doping ref /cm^3. = " <<  poissondens*(EPSILON*EPSILONR)/ECHARGE*1e-6<< endl;
   // cout  << "Acceptor  doping Value = " <<  Acceptorpoissonf<< endl;
 
-   if (gui->GetInitialDopRemoval())
-     {             
-       DopingRem = gui->InitialDopingRem(  poissonf*(EPSILON*EPSILONR)/ECHARGE*1e-6, gui->GetFluence() );
-       //      cout << " After removal Doping/cm^3 = " << DopingRem*poissonf*(EPSILON*EPSILONR)/ECHARGE*1e-6 << endl; // <<== this is correct
-       //     cout << " Inital Accept Removal Bulk  = " << DopingRem << " Initial Doping: " <<  poissonf*(EPSILON*EPSILONR)/ECHARGE*1e-6  << endl;
-       poissonf *= DopingRem;
-     }
-
-   vdepl_irr =  (poissonf + Acceptorpoissonf)*dist*dist*1e-12/2.;
-   cout  << "Bulk doping  N/cm^3 = " <<  (poissonf + Acceptorpoissonf)*(EPSILON*EPSILONR)/ECHARGE*1e-6<< " V depletion after irrad. = " <<  vdepl_irr  << endl;
- 
-   
-   if (gui->GetDJOn())
-     {
-       DJCoef = gui->GetDJValue();
-       ehratio = gui->GetDJehValue();
-       DJZero = 0.5;
-     }
 
 
-      for (int x=0; x<XMAX; x++)
-	{ 
-	  for (int y=0; y<YMAX; y++)
-	    {
-	      //dopyx[y][x] = ( poissonf + Acceptorpoissonf);
-	      dopyx[y][x] = (poissonf + Acceptorpoissonf)*(EPSILON*EPSILONR)/ECHARGE;
-	      
-	      //	      cout << " y = " << y << "poissonf = " << poissonf*DopingRem << endl;
-	      
-	      if (gui->CallGetDJType() == 0 && gui->GetDJOn())
-		{
-		  if (y< DJZero*YMAX) dopyx[y][x] += 10./2.1*DJCoef*(-poissondens*DJZero+poissondens*y/YMAX)*(EPSILON*EPSILONR)/ECHARGE;// h density
-		  else	    dopyx[y][x] += ehratio*10./2.1*DJCoef*(-poissondens*DJZero+poissondens*y/YMAX)*(EPSILON*EPSILONR)/ECHARGE; // e density
-		}
-	      else if (gui->CallGetDJType() == 1 && gui->GetDJOn())
-		{
-		  if (y<(DJZero-0.1)*YMAX)  dopyx[y][x] += 1./2.1*DJCoef*poissondens*cbrt(1.*y- DJZero*YMAX)*(EPSILON*EPSILONR)/ECHARGE;
-		  else if (y>(DJZero-0.1)*YMAX && y<YMAX*(DJZero+0.1)) dopyx[y][x] += 0.;
-		  else   dopyx[y][x] += 1./2.1*ehratio*DJCoef*poissondens*cbrt(1.*y- (DJZero+0.1)*YMAX)*(EPSILON*EPSILONR)/ECHARGE;
-		}
-	      //	      cout << " DJ y-x = " << y << " " << x << " " << dopyx[y][x]<< endl;
-	      
-	      
-	    }
-	}
-
-      // here you add the doping layer before the computation of the field, it's the correct thing to do, but it takes a lot of time to compute
+  
+  if (gui->GetInitialDopRemoval())
+    {             
+      DopingRem = gui->InitialDopingRem(  poissonf*(EPSILON*EPSILONR)/ECHARGE*1e-6, gui->GetFluence(),2);
+      //      cout << " After removal Doping/cm^3 = " << DopingRem*poissonf*(EPSILON*EPSILONR)/ECHARGE*1e-6 << endl; // <<== this is correct
+      //     cout << " Inital Accept Removal Bulk  = " << DopingRem << " Initial Doping: " <<  poissonf*(EPSILON*EPSILONR)/ECHARGE*1e-6  << endl;
+      poissonf *= DopingRem;
       
-       if (fabs(gui->GetDopinggainlayerValue()) > 0.001 && VFROMDOP == 1) // VFROMDOP = calculate  V from Doping
-	 //     if (fabs(gui->GetDopinggainlayerValue()) > 0.001 ) 
-	{
-	  //	  cout << "Gain layer V depletion: " << gui->GetGainLayerVdepletion() << " Gain region V depletion: " << gui->GetGainRegionVdepletion() << " micron" << endl;
-	  //	  cout << "Setdoping: Gain layer region: " << gui->Getygainlayerlow() << " - " << gui->Getygainlayerhigh() << " micron " << endl;
-	  // cout << "YMAX: " <<  GetYMAX() << " step size " << GetBinSizey()  << " Thickness = " << GetBinSizey()*YMAX << endl;
-	  double dd = 0;
-	  //	  double VdepGainLayer=  gui->GetGainLayerVdepletion();
-	  //fabs(gui->GetDopinggainlayerValue())*ECHARGE/(2*EPSILON*EPSILONR)*1e-12;
-	  
-	  
-	  int GainRecessBins= (int)  (gui->GetGainRecess()/GetBinSizex() );
-	  //   cout << "Gain Recess = " << gui->GetGainRecess() <<  " bins = "  << GainRecessBins<<  endl;
-	  
-	  /// nicolo cut
+    }
+  if ( gui->GetInitialDopRemoval() || gui->GetAcceptorCreation())
+    {
+      vdepl_irr =  (poissonf + Acceptorpoissonf)*dist*dist*1e-12/2.;
+      if (rflag ==0) cout  << "After irradiation: Bulk doping = "<< setprecision(2) <<  (poissonf + Acceptorpoissonf)*(EPSILON*EPSILONR)/ECHARGE*1e-6<< "[N/cm^3]; V depletion = " <<  vdepl_irr  <<" [V]; \n ";
+    }
+   
+  if (gui->GetDJOn())
+    {
+      DJCoef = gui->GetDJValue();
+      ehratio = gui->GetDJehValue();
+      DJZero = 0.5;
+    }
 
-	  double LocalDop = 0 ;
+
+  for (int x=0; x<XMAX; x++)
+    { 
+      for (int y=0; y<YMAX; y++)
+	{
+	  //dopyx[y][x] = ( poissonf + Acceptorpoissonf);
+	  dopyx[y][x] = (poissonf + Acceptorpoissonf)*(EPSILON*EPSILONR)/ECHARGE;
+	  
+	  //	      cout << " y = " << y << "poissonf = " << poissonf*DopingRem << endl;
+	  
+	  if (gui->CallGetDJType() == 0 && gui->GetDJOn())
+	    {
+	      if (y< DJZero*YMAX) dopyx[y][x] += 10./2.1*DJCoef*(-poissondens*DJZero+poissondens*y/YMAX)*(EPSILON*EPSILONR)/ECHARGE;// h density
+	      else	    dopyx[y][x] += ehratio*10./2.1*DJCoef*(-poissondens*DJZero+poissondens*y/YMAX)*(EPSILON*EPSILONR)/ECHARGE; // e density
+	    }
+	  else if (gui->CallGetDJType() == 1 && gui->GetDJOn())
+	    {
+	      if (y<(DJZero-0.1)*YMAX)  dopyx[y][x] += 1./2.1*DJCoef*poissondens*cbrt(1.*y- DJZero*YMAX)*(EPSILON*EPSILONR)/ECHARGE;
+	      else if (y>(DJZero-0.1)*YMAX && y<YMAX*(DJZero+0.1)) dopyx[y][x] += 0.;
+	      else   dopyx[y][x] += 1./2.1*ehratio*DJCoef*poissondens*cbrt(1.*y- (DJZero+0.1)*YMAX)*(EPSILON*EPSILONR)/ECHARGE;
+	    }
+	  //	      cout << " DJ y-x = " << y << " " << x << " " << dopyx[y][x]<< endl;
+	  
+	  
+	}
+    }
+  
+  // here you add the doping layer before the computation of the field, it's the correct thing to do, but it takes a lot of time to compute
+  
+  if (gui->GetGainShape() !=0 && VFROMDOP == 1) // VFROMDOP = calculate  V from Doping
+    //     if (fabs(gui->GetDopinggainlayerValue()) > 0.001 ) 
+    {
+      //	  cout << "Gain layer V depletion: " << gui->GetGainLayerVdepletion() << " Gain region V depletion: " << gui->GetGainRegionVdepletion() << " micron" << endl;
+      //	  cout << "Setdoping: Gain layer region: " << gui->Getygainlayerlow() << " - " << gui->Getygainlayerhigh() << " micron " << endl;
+      // cout << "YMAX: " <<  GetYMAX() << " step size " << GetBinSizey()  << " Thickness = " << GetBinSizey()*YMAX << endl;
+      double dd = 0;
+      //	  double VdepGainLayer=  gui->GetGainLayerVdepletion();
+      //fabs(gui->GetDopinggainlayerValue())*ECHARGE/(2*EPSILON*EPSILONR)*1e-12;
+      
+      
+      int GainRecessBins= (int)  (gui->GetGainRecess()/GetBinSizex() );
+      //   cout << "Gain Recess = " << gui->GetGainRecess() <<  " bins = "  << GainRecessBins<<  endl;
+      
+      /// nicolo cut
+      
+      double LocalDop = 0 ;
 	  // add gainlayer doping
 	  for(int y=0;y<YMAX;y++)
 	    {
@@ -702,6 +709,8 @@ Potentials::~Potentials() {	// destructor
 //////////////////////////////////////////////////////////////////////
 void Potentials::Restriktor()    //method to restrict potentials to a coarser grid, with XMAX/2+1
 {
+  //  cout << __LINE__<< endl;
+  
   int z=0,s=0;	// z: lines, s: columns
   ref=ref+1;	// increase ref 
   Potentials newpot(YMAX/2+1,XMAX/2+1); // temporary new object newpot on coarser grid
@@ -875,13 +884,16 @@ void Potentials::Prolongation(bool ReadOutTopFlag) // method to prolongate poten
 //////////////////////////////////////////////////////////////////////////
 void Potentials::Multigrid(void *wfgui, bool ReadOutTopFlag)
 {
+  //  cout << __LINE__<< endl;
+  
   WFGUI* gui= (WFGUI*) wfgui;
+
 
   
   for(int i=0; i<multig; i++) { // starting with calculation on coarsest grid, we need to restrict potentials
     Restriktor();
   }
-
+  //  cout << __LINE__<< endl;
   double LocalDop = 0;
   double DopingRem = 1;
   char * gridlabel;
@@ -892,8 +904,8 @@ void Potentials::Multigrid(void *wfgui, bool ReadOutTopFlag)
   gridlabel2 = new char[50];
   // sprintf(gridlabel2, "Calculating Potentials: grid number: %d/%d",1,multig+1);
 
-  cout << "Gain layer V depletion: " << gui->GetGainLayerVdepletion() << " Volt " << endl;
-  SetDopingProfile(gui);
+
+  SetDopingProfile(gui,0);
 
   Iteration(gui);
   
@@ -907,13 +919,11 @@ void Potentials::Multigrid(void *wfgui, bool ReadOutTopFlag)
     
     gui->GetCalculatingLabel2()->SetTitle(gridlabel2);
     gui->GetCalculatingLabel()->SetTitle(gridlabel);
-    SetDopingProfile(gui);
+    SetDopingProfile(gui,1);
     Iteration(gui);
     //    Smoothing();
   }
-
-  cout << "Gain layer region: " << gui->Getygainlayerlow() << " - " << gui->Getygainlayerhigh() << " micron" << endl;
-  //  double GainLayerThick =  gui->Getygainlayerhigh() - gui->Getygainlayerlow();
+   //  double GainLayerThick =  gui->Getygainlayerhigh() - gui->Getygainlayerlow();
   
   //  Smoothing();
   
@@ -923,7 +933,8 @@ void Potentials::Multigrid(void *wfgui, bool ReadOutTopFlag)
  
   // Add gainlayer doping
   //if (fabs(gui->GetDopinggainlayerValue()) > 0.001 && 1 == 2)
-  if (fabs(gui->GetDopinggainlayerValue()) > 0.001 && VFROMDOP !=1)
+  //if ( fabs(gui->GetDopinggainlayerValue()) > 0.001 && VFROMDOP !=1)
+  if (gui->GetGainShape() !=0 && VFROMDOP != 1) // add gain  layer
     {
       //      cout << "Gain layer region: " << gui->Getygainlayerlow() << " - " << gui->Getygainlayerhigh() << " micron" << endl;
       double dd = 0;
@@ -943,13 +954,18 @@ void Potentials::Multigrid(void *wfgui, bool ReadOutTopFlag)
       //gui->GetGainLayerVdepletion();
       if (gui->GetInitialDopRemoval())
 	{	  
-	  DopingRem = gui->InitialDopingRem(gui->GetDopinggainlayerValue()*1e-6 , gui->GetFluence()) ;
+	  DopingRem = gui->InitialDopingRem(gui->GetDopinggainlayerValue()*1e-6 , gui->GetFluence(), 1) ;
 	  //  cout << " After removal  = " << VdepGainLayer << endl; // <<== this is correct
 	  //	  cout << " Inital Acceptor Removal Gain Layer = " << DopingRem << " Initial Doping: " << gui->GetDopinggainlayerValue()*1e-6  << endl;
-	  cout << "Fraction of inital acceptor in the gain layer still present = " << DopingRem <<
+	  if (gui->GetGainShape() != 0)  cout << "Fraction of inital acceptor in the gain layer still present = " << DopingRem <<
 	    " Final gain layer doping: " <<  DopingRem*gui->GetDopinggainlayerValue()*1e-6  <<  " [N/cm^3] " << endl;
+	  gui->SetGainLayerVdepletion(DopingRem*gui->GetDopinggainlayerValue());
 	}
-      
+
+      if (gui->GetGainShape() !=0) cout << "Gain layer V depletion: " << gui->GetGainLayerVdepletion() << " V " << endl;
+      if (gui->GetGainShape() != 0) cout << "Gain layer region: " << gui->Getygainlayerlow() << " - " << gui->Getygainlayerhigh() << " micron \n";
+  
+
       int GainRecessBins= (int)  (gui->GetGainRecess()/GetBinSizex() );
       //   cout << "Gain Recess = " << gui->GetGainRecess() <<  " bins = "  << GainRecessBins<<  endl;
 
@@ -1076,10 +1092,10 @@ void Potentials::Multigrid(void *wfgui, bool ReadOutTopFlag)
   /// nicolo's cut
   
   //     if (gui->GetInitialDopRemoval() && (bulk==PTYPE) )
-  if (gui->GetInitialDopRemoval()  )
+  if (gui->GetInitialDopRemoval())
      {
        double poissonf=((bulk==PTYPE) ? -1.0 : 1.0)*(2.0*vdepl)/( gui->GetYMax()* gui->GetYMax()*1e-12);    
-       DopingRem = gui->InitialDopingRem(  poissonf*(EPSILON*EPSILONR)/ECHARGE*1e-6, gui->GetFluence() );
+       DopingRem = gui->InitialDopingRem(poissonf*(EPSILON*EPSILONR)/ECHARGE*1e-6, gui->GetFluence(),2);
        //       cout << " After removal Doping/cm^3 = " << DopingRem*poissonf*(EPSILON*EPSILONR)/ECHARGE*1e-6 << endl; // <<== this is correct
        if (DopingRem < 0.00001) DopingRem = 0;
        cout << "Fraction of inital doping in the bulk still present = " << DopingRem << " Final bulk doping: " <<  DopingRem*poissonf*(EPSILON*EPSILONR)/ECHARGE*1e-6  <<"  N/cm^3 " << endl;

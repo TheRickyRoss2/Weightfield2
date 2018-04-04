@@ -689,9 +689,11 @@ void CreateChargesLaserSide(Potentials &pot, Carriers *carriers, int hit, void* 
 	for (int i=SumSteps; i<SumSteps+PairsPer5Micron[mm]; i++)
 	  //   for (int i=0; i<TotPairs; i++)
 	  {
-	    ypos= hit + gRandom->Gaus(0,1);	    
-	    xpos = mm*DistHisto+((i-SumSteps)/double(PairsPer5Micron[mm]))*double(DistHisto); //+1 and *.98 to be sure we are withing the active volume
-	   
+	    ypos= hit;	    
+	    xpos = (mm)*DistHisto+((i-SumSteps)/double(PairsPer5Micron[mm]))*double(DistHisto); //+1 and *.98 to be sure we are withing the active volume
+	    if (xpos > pot.GetXMAX()*pot.GetBinSizex()-2.) xpos = pot.GetXMAX()*pot.GetBinSizex()-2.;
+	    if (xpos <1. ) xpos = 2.;
+	    //	    cout << "xpos = " << pot.GetXMAX() << " " << xpos << endl;
 	    carriers[i].Setx(xpos);
 	    carriers[i].Sety(ypos);
 	    carriers[i].SetCharge(-1);
@@ -716,7 +718,135 @@ void CreateChargesLaserSide(Potentials &pot, Carriers *carriers, int hit, void* 
 	if (!gui->GetLess2DPlot() )
 	  {
 	    gui->Getcanvasp()->cd();
-	    ellipse->DrawEllipse(xpos-2.5, ypos-2.5,eradius,eradius,0.,360.,0.);
+	    ellipse->DrawEllipse(xpos, ypos,eradius,eradius,0.,360.,0.);
+	  }
+      }
+    if (!gui->GetLess2DPlot())   cout << "Updating Canvas, Drawing Ellipses " << endl;
+    if (!gui->GetLess2DPlot())   gui->Getcanvasp()->Update();
+
+    pot.Setmipcharge(TotPairs);
+}
+//////////////////////////////////////////////////////////
+void CreateChargesMipSide(Potentials &pot, Carriers *carriers, int hit, void* wfgui)   // crea cariche con MIP  da destra (3D trench)
+{
+    WFGUI* gui= (WFGUI*) wfgui; // pointer to gui
+    //    bool CoutFlag = (gui->GetBatchOn() == false) ? 1:0;
+    cout << "MIP SIDE" << endl;
+    TEllipse *ellipse = new TEllipse();
+    ellipse->SetFillStyle(0);
+
+    TFile Myf("Geant_Vin.root");
+    TH1F * EDist;
+    float EPair = 3.6;
+
+
+    if (Myf.IsOpen())  
+      {
+	if( gui->CallGetDetType() == 0 ||  gui->CallGetDetType() == 2)
+	  {
+	    EDist =  (TH1F*)Myf.Get("Silicon_Vin");
+	  }
+      }
+    else
+      cout << " Problem in opening the file Silicon_Vin" << endl;
+    
+    int PairsPer5Micron[1000];
+
+    for (int nn = 0;nn<1000;nn++)
+    {
+        PairsPer5Micron[nn]=0;
+
+    }
+    int TotPairs = 0;   
+    int ll = 0;
+    int SumPairs=0;
+    int SumSteps=0;
+    int mm = 0;
+    int HMax = 0;
+    //int HMin = 50000;
+    float xpos = 0;
+    float ypos = 0;
+    int DistHisto = 5; //The histogram has the energy deposition every 5 microns
+    float Path = (pot.GetXMAX()*pot.GetBinSizex());
+    if (!gui->GetLess2DPlot())
+    {
+        pot.DriftPal();
+        gui->Getcanvasp()->cd();
+        gui->Getdhist()->Draw("COLZ");
+	gui->DrawStrips(0);
+    }
+    
+      //    float ypos = hit; //initial y position is specified by user and doesn't change
+    int chargescale = gui->GetPrecision();
+    
+    for (int il =0; il<=Path; il+=DistHisto)
+      {
+	float ran = EDist->GetRandom();
+	
+	//float ran = 75*gRandom->Gaus(0, 1.);
+	PairsPer5Micron[ll] = ran*1e6/EPair;
+	cout << " Pairs = " << ran*1e6/EPair  << " " << ran << endl;
+	//PairsPer5Micron[ll] = gui->GetChargeEntry()*5.*exp(-1.*il/Laser1024Range);
+	TotPairs +=PairsPer5Micron[ll];
+	ll++;
+
+      }
+    
+    TotPairs  *=1./chargescale;
+
+    if( gui->GetBatchOn()==false)    gui->GetEnhist()->Reset();
+    
+
+    for (mm = 0; mm<ll; mm++)
+      {
+	if( gui->GetBatchOn()==false)
+	  {
+	    if (mm != ll-1) gui->GetEnhist()->Fill(PairsPer5Micron[mm]);
+	    if ( PairsPer5Micron[mm] > HMax)
+	      {
+		HMax = PairsPer5Micron[mm];
+		gui->GetEnhist()->GetXaxis()->SetRangeUser(0.,  HMax*1.5);
+	      }
+	  }
+	
+	PairsPer5Micron[mm] *=1./chargescale;	    
+
+ 	
+	
+	
+	for (int i=SumSteps; i<SumSteps+PairsPer5Micron[mm]; i++)
+	  //   for (int i=0; i<TotPairs; i++)
+	  {
+	    ypos= hit;	    
+	    xpos = (mm)*DistHisto+((i-SumSteps)/double(PairsPer5Micron[mm]))*double(DistHisto); //+1 and *.98 to be sure we are withing the active volume
+	    if (xpos > pot.GetXMAX()*pot.GetBinSizex()-2.) xpos = pot.GetXMAX()*pot.GetBinSizex()-2.;
+	    if (xpos <1. ) xpos = 2.;
+	    //	    cout << "xpos = " << pot.GetXMAX() << " " << xpos << endl;
+	    carriers[i].Setx(xpos);
+	    carriers[i].Sety(ypos);
+	    carriers[i].SetCharge(-1);
+	    carriers[i].Setinside(1);    // yes
+	    carriers[i].SetGainPart(false);  //is not a gain electron!
+	    
+	    //	    cout << "i =" << i << " x-edge " << xpos<< " y " << ypos <<endl;
+	    
+	    
+	    carriers[TotPairs+i].Sety(carriers[i].Gety());
+	    carriers[TotPairs+i].Setx(carriers[i].Getx());	//posiziona la lacuna
+	    carriers[TotPairs+i].SetCharge(1);
+	    carriers[TotPairs+i].Setinside(1);    // yes
+	    carriers[TotPairs+i].SetGainPart(false); 	//is not a gain hole
+	    //      cout << pot.Getmipcharge()+i << " From Tot" << endl;
+	    // cout << carriers[i].Gety() << " " << carriers[pot.Getmipcharge()+i].Gety()<< endl;
+	    SumPairs++;
+	  }
+	SumSteps +=PairsPer5Micron[mm];
+	double eradius= PairsPer5Micron[mm]*0.003*chargescale/(0.5*gui->GetNumberP());
+	
+	if (!gui->GetLess2DPlot() )
+	  {
+	    gui->Getcanvasp()->cd();
+	    ellipse->DrawEllipse(xpos, ypos,eradius,eradius,0.,360.,0.);
 	  }
       }
     if (!gui->GetLess2DPlot())   cout << "Updating Canvas, Drawing Ellipses " << endl;
@@ -727,7 +857,10 @@ void CreateChargesLaserSide(Potentials &pot, Carriers *carriers, int hit, void* 
 //////////////////////////////////////////////////////////
 void CreateChargesXRay(Potentials &pot, Carriers *carriers, int hitx, int hity, void* wfgui)   // crea coppie eh da Xray
 {     // create electrons and holes, evenly distributed	
-
+  // 3.6 eV per pair as reported in 
+  // F. Scholze,a) H. Rabus, and G. Ulm
+  // JOURNAL OF APPLIED PHYSICS VOLUME 84, NUMBER 5 1 SEPTEMBER 1998
+  
   WFGUI* gui= (WFGUI*) wfgui; // pointer to gui
   bool CoutFlag = (gui->GetBatchOn() == false) ? 1:0; 
 
@@ -1085,7 +1218,6 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 	double BBGraph_der_min= 0;
 	double BBout04_max= 0;
 	double BBout04_min= 0;
-	double csa_max= 0;
 	double sh_max= 0;
 	double sh_min= 0;
 	double sh_der_max= 0;
@@ -1166,21 +1298,15 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 	/// s_1_Osc_LCR =  - alpha_Osc_LCR + pow( pow(alpha_Osc_LCR,2.) - pow(omega_Osc_LCR,2.),0.5);
 	/// s_2_Osc_LCR =  - alpha_Osc_LCR - pow( pow(alpha_Osc_LCR,2.) - pow(omega_Osc_LCR,2.),0.5);
 	
-	// TOFFEE 
-
-	double Ci = TOFFEE_gain*TOFFEE_Cf; // 70 fF feedback
-	double Qfrac = 1./(1.+gui->GetCDet()*1E-12/Ci);
-	taurise_CSA_RC = 1.0e-12*gui->GetCDet()/TOFFEE_gm; //
-	taufall_CSA_RC = 1.0e-12*gui->GetCDet()*gui->GetCSAImp(); //
 
 	// cout << "Taufall_CSA_RC" << taufall_CSA_RC << endl;
 	
 	//AR pag 382
 	float TauRise_CSA = TauRise + taurise_CSA_RC;
-	//	float TauFall_CSA = TauFall + taufall_CSA_RC;
+	float TauFall_CSA = TauFall + taufall_CSA_RC;
 	
-	double CSA_BallDef = std::pow(TauRise_CSA/TauFall, TauRise_CSA/(TauFall-TauRise_CSA));
-	double CSA_Tpeak = TauRise_CSA/(1.-TauRise_CSA/TauFall)*std::log(TauFall/TauRise_CSA);
+	double CSA_BallDef = std::pow(TauRise_CSA/TauFall_CSA, TauRise_CSA/(TauFall_CSA-TauRise_CSA));
+	double CSA_Tpeak = TauRise_CSA/(1.-TauRise_CSA/TauFall_CSA)*std::log(TauFall_CSA/TauRise_CSA);
 	
 	
 	
@@ -1524,8 +1650,8 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 			else if (ynew > pot.GetYMAX()*pot.GetBinSizey()-ELECTRODE_DEPTH) ynew = pot.GetYMAX()*pot.GetBinSizey()-1.1*ELECTRODE_DEPTH ;
 		      }
 		    
-		    if (gui->GetShowCur())
-		      {
+		    // if (gui->GetShowCur())
+		    //   {
 			//	cout << "Binxnew = " << Binxnew << " Binynew = " << Binynew << endl;
 			
 			if (carriers[j].GetCharge() > 0 )
@@ -1548,14 +1674,15 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 			//			cout <<" particle = " << j <<  " x,y = " << xnew <<" ," << ynew << " charge = "
 			//    <<  carriers[j].GetCharge() << " xqmin " << xqmin << " xqmax " << xqmax <<  endl;
 
-		      }
+			//  }
 		    
 
-		    if (j==2000)
+		    if (j==200)
 		    {
-			if (i>0) dist += sqrt( pow(carriers[j].GetVy()*TIMEUNIT*1e6,2) + pow(carriers[j].GetVx()*TIMEUNIT*1e6,2));
+		      //   	if (i>0) dist += sqrt( pow(carriers[j].GetVy()*TIMEUNIT*1e6,2) + pow(carriers[j].GetVx()*TIMEUNIT*1e6,2));
 			//   cout << " x = " << xnew << " y  = " << ynew << " distance = "<< dist 
 			// <<" Vx = " << carriers[j].GetVx() << " Vy = " << carriers[j].GetVy() << endl;
+		      //   cout << "ynew = " << ynew << " bin = "<< gui->Getchist()->GetXaxis()->FindBin(ynew) << "\n";
 
 		    }
 
@@ -1606,7 +1733,6 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 				gain *=  exp(gui->GetGainvalue(fabs(LocalE), carriers[j].GetCharge() )*pot.GetBinSizey()*1e-6);
 			      }
 
-			  
 			//			cout << " pippo2 " << ngain << endl;
 			if (gain>1.001)
 			  {
@@ -1618,6 +1744,10 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 				cout << "Local E = " << LocalE*1e-5 << " [kV/cm] " << "  Gain = " << gain<< endl;
 				cout << "The diode is in breakdown!" <<endl;
 				cout << "Reduce the gain to continue" <<endl;
+				ss << "The diode is in breakdown! the program stops " ;
+				gui->GetCalculatingLabel()->SetBackgroundColor(0x00ff00);
+				//	gui->GetCalculatingLabel()->SetTitle("Done.");
+				gui->GetCalculatingLabel()->SetTitle(ss.str().c_str()); // update progess label title	
 				return;
 			      }
 			    ngain=gain;
@@ -1641,7 +1771,10 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 				return;
 			      }
 
+			    // This expression is the particle density, it can be used to decrease the gain at high density
 			    
+			    //  cout << "xnew, ynew = " <<  xnew << ", " << ynew <<" bin  content = "<<
+			    // gui->Getchist()->GetBinContent (gui->Getchist()->GetXaxis()->FindBin(xnew), gui->Getchist()->GetYaxis()->FindBin(ynew) ) << "\n";
 			    for (int k=0;k<ngain; k++)
 			      {
 				// cout << " pippo " << ngain << endl;
@@ -1850,8 +1983,9 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 	    //cout <<"Active particles = " <<  ActiveCarriers <<  " m1 " << ActiveCarriersm1 <<  endl;
 	    // cout << " " << fabs(itot[i]) << " " <<  fabs(ie[i]) << " " <<   fabs(ih[i]) << " " <<  fabs(ieg[i]) << " " <<  fabs(ihg[i]) << endl;
 	    //	    if (fabs(itot[i-1]) < 1.e-9 && fabs(itot[i-10]) < 1.e-9 && i > 10 )
-	    if ( fabs(itot[i]) < 5.e-9 && fabs(ie[i]) < 5.e-9 && fabs(ih[i]) < 5.e-9 && fabs(ieg[i]) < 5.e-9 && fabs(ihg[i]) < 5.e-9 && i > 10 &&
-		( ActiveCarriers<300 || fabs(ActiveCarriers - ActiveCarriersm1)/ActiveCarriers<0.01) )
+	    if(IMax*TIMEUNIT> 0.10*1E-9) // be sure there is enough time to develop a current
+	    if ( (fabs(itot[i]) < 5.e-9 && fabs(ie[i]) < 5.e-9 && fabs(ih[i]) < 5.e-9 && fabs(ieg[i]) < 5.e-9 && fabs(ihg[i]) < 5.e-9 && i > 10 &&
+		 ( ActiveCarriers<300 || fabs(ActiveCarriers - ActiveCarriersm1)/ActiveCarriers<0.01)) || ActiveCarriers<10 )
 	      {
 		if (gui->GetBatchOn()==false)
 		  cout << " ========= Results =================" << endl;	
@@ -2039,7 +2173,7 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 	//	cout << " Endo of loop t " << endl;
 	//here endo of current
 	//	std::stringstream ss;
-	//	cout  << " Done: Current = 0 at Time = "<< IMax*TIMEUNIT*1e9 << " ns " ;
+	cout  << "Done: Current = 0 at Time = "<< IMax*TIMEUNIT*1e9 << " ns; Current steps IMax = " << IMax << endl;
 	// gui->GetCalculatingLabel()->SetBackgroundColor(0x00ff00);
 	
 	gui->GetCalculatingLabel()->SetTitle("Done with current, now drawing currents...");
@@ -2190,7 +2324,7 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 	    gui->GetCalculatingLabel()->SetTitle(ss.str().c_str()); // update progess label title		
 	    
 	  }
-
+	cout << "Integral of current: " << qtot*1e15 << " [fC] " << endl;
 	double* q; 				// x coordinate for graph Current(time)	
 	q = new double[IMax]; 		// allocate memory	
 	for(int k=0;k<IMax;k++)  q[k]=TIMEUNIT*(double)k; // set t coordinate
@@ -2236,7 +2370,7 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 	    IMaxSh = min( (IMax+IintTime), int(TIMEMAX)); // Maximum number of bins for electronics (limited at 30 ns)
 
 	    cout << "Number of steps Imaxsh = " << IMaxSh << " for a total simulation of = " <<  IMaxSh*TIMEUNIT*1e9 << " [ns] " << endl;
-	    
+
 	    qSh = new double[IMaxSh]; 		// allocate memory
 	    qSh_Norm_sh = new double[IMaxSh]; 		// allocate memory
 	    qSh_Norm_BB = new double[IMaxSh]; 		// allocate memory
@@ -2269,12 +2403,14 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 		else   CSAOut[k] = fabs(qtot)*1e15;
 	      }
 	  	    
-	    cout << "Starting current calculation" <<endl;
+	    cout << "Starting simulation of electronics" <<endl;
 	    int Step =  1;
 	    if ( IMaxSh > 5000) Step =  IMaxSh/5000;
-	    cout << "TIMEUNIT = " << TIMEUNIT*1e12 << " [ps] " << " with a step = " << Step << endl;
-
-
+	    //   cout << "TIMEUNIT = " << TIMEUNIT*1e12 << " [ps] " << " Electronic current calculated in step of = " << Step*TIMEUNIT*1e12 << " [ps] " << endl;
+	    // cout << " Steps = " << Step*TIMEUNIT << " " << tau_BB_RC << " " << (int) 3.*(tau_BB_RC)/TIMEUNIT << endl;
+	    if ( Step*TIMEUNIT > tau_BB_RC/25.) Step = (tau_BB_RC)/(25*TIMEUNIT);
+	    // cout << " BB RC = " << tau_BB_RC << endl;
+	    cout << "TIMEUNIT = " << TIMEUNIT*1e12 << " [ps] " << " Electronic current calculated in step of = " << Step*TIMEUNIT*1e12 << " [ps] " << endl;
 	    int DStep = Step;
 	    double tr = 5.6E-9 ;
 	    double til = 1.8E-9 ;
@@ -2282,25 +2418,20 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 	    double tau = 0;
 	    double tt = 0;
 	    float Idif = 0;
-	    float Idif_BB = 0;
-	    float Idif_OSC = 0;
 	    float Qdif_Shaper = 0;
-	    for (int i=0;i<IMaxSh;i+=Step)
+
+	    for (int i=0;i<IMaxSh-Step;i+=Step)
 	      {
 		
 
 		if (i== 0 ) Idif  = itot[0] ; 
 		else if (i>0 && i< IMax-Step)
 		  {
-		    //		    Idif  = itot[i] - itot[i-Step];
-		    //Idif  = (itot[i])*(Step*TIMEUNIT/tau_BB_RC);// Io flowing in the RC circuit
-		    // Idif_OSC  = (itot[i])*(Step*TIMEUNIT/tau_C50);// Io flowing in the RC circuit
-		    
+		    		    
 		    PreAmp_Q[i] = 0;
 		    for ( int il = i; il<i+Step; il++)
 		      {			
 			PreAmp_Q[i] += itot[il]*TIMEUNIT;
-			
 		      }
 		  }
 		
@@ -2308,40 +2439,36 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 		  {
 		    PreAmp_Q[i] = 0;
 		  }
-		
+
 		// Iout_temp reproduces correctly Speiler pag 127//
 	      }
-	    for (int i=0;i<IMaxSh;i+=Step)
+	 
+
+	    //  cout << __LINE__<<endl;
+	    
+	    for (int i=0;i<IMaxSh-1;i+=Step)
 	      {
 		if (i >= Step)
 		  {
-		    Qdif_Shaper  = PreAmp_Q[i]; //  - PreAmp_Q[i-Step]);
+		    Qdif_Shaper  = PreAmp_Q[i]; 
 		  }
 		else
 		  {
 		    Qdif_Shaper  = 0;
+		    // Qdif  = 0;
 		  }
-	      
-		//		Qdif_Shaper  = itot[i]*TIMEUNIT;				    
-		for (int ll = 0; ll<IMaxSh-i;ll+=Step)  // valid only up to IMaxSh 
+
+		if (Qdif_Shaper != 0)		 
+		  for (int ll = 0; ll<IMaxSh-i;ll+=Step)  // valid only up to IMaxSh 
 		 {
 
-		   Iout_C50[i+ll] += ( PreAmp_Q[i]- PreAmp_Q[i-Step])/tau_C50*TMath::Exp(-ll*TIMEUNIT/tau_C50); //Input current  on the scope
-		   Iout_BB_RC[i+ll] += ( PreAmp_Q[i]- PreAmp_Q[i-Step])/(tau_BB_RC)*(TMath::Exp(-ll*TIMEUNIT/tau_BB_RC)); //Input current to the BBA
+		   Iout_C50[i+ll]   += (Qdif_Shaper)/tau_scope*TMath::Exp(-ll*TIMEUNIT/tau_scope); //Input current  on the scope, convolution with BW
+		   Iout_BB_RC[i+ll] += (Qdif_Shaper)/tau_BBA*TMath::Exp(-ll*TIMEUNIT/tau_BBA); //Input current to the BBA, convolution with BW
 
-		  
-		   // BBGraph[i] =  Iout_BB_RC[i];
-		   //		   Vout_scope[i+ll]
-		   Vout_scope[i+ll] += 50*Iout_C50[i]*(1.-TMath::Exp( (float) -ll*TIMEUNIT/tau_BW)); // Output Voltage Scope, convolution with BW
-		   BBGraph[i+ll] += 1e+3*BBImp*BBGain*Iout_BB_RC[i]*(1.-TMath::Exp( (float) -ll*TIMEUNIT/tau_BB_BW)); // Output Voltage BBA, convolution with BW
 
-		   //1e+3*50*Idif_OSC*(TIMEUNIT/tau_BW)*((TMath::Exp( (float) -ll*TIMEUNIT/tau_BW))); // This is the convolution with the Scope BW
-		     //
+		   Vout_scope[i+ll] = 50*Iout_C50[i+ll]; // Output Voltage Scope, 
+		   BBGraph[i+ll] = 1e+3*BBImp*BBGain*Iout_BB_RC[i+ll]; // Output Voltage BBA
 		   
-		    //	    Vout_scope[i+ll] += Idif_OSC*(1.-(TMath::Exp( (float) -ll*TIMEUNIT/tau_BW))); // This is the convolution with the Scope BW
-		    // BBGraph[i+ll] += 1e3*BBImp*BBGain*Idif_BB*(1.-(TMath::Exp( (float) -ll*TIMEUNIT/tau_BB_BW))); // This is the convolution with the BB BW
-		    // BBGraph[i+ll] += TauFall_BB/(TauFall_BB+TauRise_BB)*1e3*BBImp*BBGain*Idif_BB*(TMath::Exp(-ll*TIMEUNIT/TauFall_BB)-TMath::Exp(-ll*TIMEUNIT/TauRise_BB)); 
-		    // nico
 		    //
 		    if (! gui->GetNA62On())		    
 		      {
@@ -2360,22 +2487,19 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 			}
 		    // end Flavio
 		  }
-		
-		// if (i<100)
-		//		cout << i << " Vout_scope[i] " << Vout_scope[i]<< "  BBGraph[i] " <<  BBGraph[i]  << endl;
-		
+	
 		if (fabs(ShaperOut_Q[i])>fabs(sh_max)) 
 		  {
 		    sh_max = ShaperOut_Q[i];		    
 		  }
-
+		//		if (i <10000) cout << i << " scopE " << Iout_C50[i] <<  " AMPl " << Iout_BB_RC[i] << endl;
+		
 	      }
-	    
-	    //	    cout << "  done with current " << endl;
-	    //	    cout << "Shaper Max " << sh_max << endl;
+
 	    
 	    // qtot = total charge, Qfrac = charge that goes to the CSA, it depends on the sensors capacitance
-	    
+	    double Ci = TOFFEE_gain*TOFFEE_Cf; // 70 fF feedback
+	    double Qfrac = 1./(1.+ gui->GetCDet()*1E-12/Ci);
 	    for (int i=0;i<IMaxSh;i+=Step) 
 	     {
 	       ShaperOut_V[i] = ShaperOut_Q[i]*CSATransImp*1e15*qtot*Qfrac/sh_max; // [mV/fQ *Q/Q]
@@ -2536,11 +2660,10 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 	    //	    cout << BBout_max << " " << NMax_BB << " " << BBout04 << endl;
 	    // cout << BBout_min << " " << Nmin_BB << " " << BBout04 << endl;
 
-	    OscArea *=TIMEUNIT*1e12;   
+	    OscArea *=TIMEUNIT;   
 
-	    cout << "Signal Area = " << fabs(OscArea) <<  " [pVs] " << endl;
-	    cout << "Collected charge = " << OscArea/50*1e3 <<  " [fC] "  << endl;
-	    cout << "Average Current = " << OscArea/50/(IMax*TIMEUNIT)*1e-6 <<  " [uA] "  << endl;
+	    cout << "Signal Area = " << fabs(OscArea*1e12) <<  " [pVs] " << endl;
+	    cout << "Integral Oscilloscope current = " << OscArea/50*1e15 <<  " [fC] "  << endl;
 	    cout << "Preamp. Current Rise time 10%-90% (R = 50 Ohm)  = " << SysTr <<  " [ns] " << endl;
 	    cout << "System Rise tau: predicted (from R = 50 * C) = "<< tau_C50*1e9 << " simulated = " << SysTau <<  " [ns] " << endl;
 	    cout << "BBA Simulated BW  = " << SysBW <<  " [GHz] " << endl;
@@ -2635,8 +2758,8 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 	    if (CSAVth <1)
 		CSAVth *= sh_der0;
 	    
-	    cout << "BB Vth = " << BBVth << endl;
-	    cout << "CSA Vth = " << CSAVth << endl;
+	    cout << "BB Vth = " << BBVth << " mV" << endl;
+	    cout << "CSA Vth = " << CSAVth << " mV" << endl;
 	    float DT = (TIMEUNIT*1e9*2.*DStep);
 	    //   cout << " Dstep " << DStep <<  " totaltime" << totaltime << endl;
 	    // cout << " Crash flag 1 "<< endl;

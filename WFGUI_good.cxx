@@ -8,7 +8,7 @@
 
 ///-----------------------------------------------------\\ VARIABLES INITIAL VALUES //-------------------------------------------------------------///
 
-std::map<std::string, double> GetParameters(const char* ifname)
+std::map<std::string, double> GetParameters(const char* ifname = "parameters.dat")
 {
 	std::map<std::string, double> valueMap;
 
@@ -102,18 +102,11 @@ std::map<std::string, double> GetParameters(const char* ifname)
 
 ///------------------------------------------------------------\\ GUI SETUP //--------------------------------------------------------------------///
 
-WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFrame(p,w,h), dwpot(Potentials(300,1,200,30)) {
+WFGUI::WFGUI(const TGWindow *p,UInt_t w,UInt_t h): TGMainFrame(p,w,h), dwpot(Potentials(300,1,200,30)) {
 
     //take intial varible names from parameters file
 	const char* ifname = "parameters.dat";
-  string userFile;
-  if(app->Argc() < 2){
-    ifname = "parameters.dat";
-  }else{
-    ifname = app->Argv(1);
-  }
 	std::map<std::string, double> valueMap = GetParameters(ifname);
-  this->UserValues = valueMap;
 
 	// mainframes initial settings
 	radiobuttonstatus=MIPunif;//radio button mip set as default
@@ -549,19 +542,6 @@ WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFr
     CalculateButton = new TGTextButton(ButtonPotFrame,"Currents");
     StopButton = new TGTextButton(ButtonPotFrame," Stop ");
     ExitButton = new TGTextButton(ButtonPotFrame," Exit ");
-    // Saving interface
-    SaveButton = new TGTextButton(ButtonPotFrame, " Save ");
-    SaveFileName = new TGTextEntry(ButtonPotFrame, new TGTextBuffer(5), kSunkenFrame | kDoubleBorder | kOwnBackground);
-    SaveFileName->SetText("sampleout.dat");
-    SaveFileName->SetMaxLength(4096);
-    SaveFileName->SetAlignment(kTextLeft);
-    SaveFileName->MoveResize(40, 1, 160, 15);
-    SaveFileName->SetState(kTRUE);
-    SaveButton->Associate(this);
-    SaveButton->SetTextColor(1, kFALSE);
-    SaveButton->Connect("Clicked()", "WFGUI", this, "SaveData()");
-    SaveButton->SetEnabled(kTRUE);
-
 
     //develop entries
     SetButton->Associate(this);
@@ -775,10 +755,9 @@ WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFr
     ParticleKind = new TGComboBox(ParticlesKindFrame);
     ParticleKind->AddEntry(new TGString("MIP: uniform Q, Qtot = q*[#eh/um]*Height"), 1);
     ParticleKind->AddEntry(new TGString("MIP: NON uniform Q, Qtot = q*[#eh/um]*Height"), 2);
-    ParticleKind->AddEntry(new TGString("MIP Landau"), 3);
+    ParticleKind->AddEntry(new TGString("MIP: NON uniform Q, Qtot = Landau"), 3);
     ParticleKind->AddEntry(new TGString("Laser (1064 nm): Top-TCT, Q = q*[#eh/um]*Height"), 4);
     ParticleKind->AddEntry(new TGString("Laser (1064 nm): Edge-TCT, Q = q*[#eh/um]*Height"), 8);
-    ParticleKind->AddEntry(new TGString("Edge MIP Landau"), 10);
     ParticleKind->AddEntry(new TGString("Laser (4-600 nm)/Alpha from top: E = 5MeV"), 5);
     ParticleKind->AddEntry(new TGString("Laser (4-600 nm)/Alpha from bottom: E = 5MeV"), 6);
     ParticleKind->AddEntry(new TGString("X-Ray"), 9);
@@ -811,7 +790,8 @@ WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFr
     ParticleSpecificsLabel4->SetMargins(0,0,2,2);
     ParticleSpecificsLabel4->Disable(kTRUE);
     NumberEntry->SetState(kTRUE);
-    //CallSetPart(1)
+    //CallSetPart(1);
+
     
     //add entries
     ParticlesKindFrame->AddFrame(ParticleKind, new TGLayoutHints(kLHintsLeft| kLHintsTop| kLHintsExpandX, 1,1,1,1));
@@ -907,37 +887,22 @@ WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFr
     //create entries
     //    IrradiationLabel3 = new TGLabel(IrradiationOnFrame,new TGString("Fluence [10^14 neq /cm^2]:"));
     IrradiationLabel3 = new TGLabel(IrrParticleFrame,new TGString("Fluence [10^14 neq /cm^2]:"));
+    ParticleIrrButtonGroup = new TGButtonGroup(IrrParticleFrame, " ", kHorizontalFrame);
     IrradiationEntry = new TGNumberEntry(IrrParticleFrame, valueMap["IRRADIATION"],3,-1,TGNumberFormat::kNESReal,TGNumberFormat::kNEANonNegative,TGNumberFormat::kNELLimitMinMax,0,10000);
-    
-    DopingGLButtonGroup = new TGButtonGroup(IrrParticleFrame, "Gain layer doping", kHorizontalFrame);
-    ParticleIrrButtonGroup = new TGButtonGroup(IrrParticleFrame, "Irradiation with: ", kHorizontalFrame);
-
-    // IrradiationEntry = new TGNumberEntry(IrradiationSetFrame, valueMap["IRRADIATION"],3,-1,TGNumberFormat::kNESReal,TGNumberFormat::kNEANonNegative,TGNumberFormat::kNELLimitMinMax,0,10000);
 
     IrradiationOnButton = new TGCheckButton(IrradiationOnFrame, "CCE beta electron, holes:",0);
     AcceptorCreationButton = new TGCheckButton(IrradiationOnFrame, "Acceptor creation",0);
 
-    InitialDopRemovalButton = new TGCheckButton(IrradiationLabelFrame, "Init. dop. removal; Fluence:",0);
+    InitialDopRemovalButton = new TGCheckButton(IrradiationLabelFrame, "Initial Doping removal",0);
     IrradiationEntry2 = new TGNumberEntry(IrradiationLabelFrame, valueMap["BETA_ELECTRONS"],3,-1,TGNumberFormat::kNESReal,TGNumberFormat::kNEANonNegative,TGNumberFormat::kNELLimitMinMax,0,10000);
     
 
     IrradiationEntry3 = new TGNumberEntry(IrradiationSetFrame, valueMap["BETA_HOLES"],3,-1,TGNumberFormat::kNESReal,TGNumberFormat::kNEANonNegative,TGNumberFormat::kNELLimitMinMax,0,10000);
     // IrradiationLabel = new TGLabel(IrradiationLabelFrame,new TGString(":"));
-    
 
-    DopingGLButton[0] = new TGRadioButton( DopingGLButtonGroup, new TGHotString("B"));
-    DopingGLButton[1] = new TGRadioButton( DopingGLButtonGroup, new TGHotString("B+C"));
-    DopingGLButton[0]->SetState(kButtonDown);
-    DopingGLButton[0]->SetOn(kTRUE);  
-    // DopingGLButton[0]->Connect("Toggled(Bool_t)", "WFGUI", this, "CallSetDopingGL()");
-    // DopingGLButton[1]->Connect("Toggled(Bool_t)", "WFGUI", this, "CallSetDopingGL()");
-    // CallSetDopingGL();
-
-    
     ParticleIrrButton[0] = new TGRadioButton( ParticleIrrButtonGroup, new TGHotString("neutrons "));
-    ParticleIrrButton[1] = new TGRadioButton( ParticleIrrButtonGroup, new TGHotString("protons/pions"));
+    ParticleIrrButton[1] = new TGRadioButton( ParticleIrrButtonGroup, new TGHotString("pions "));
     //  IrradiationLabel2 = new TGLabel(IrradiationLabelFrame,new TGString("beta_electrons:"));
-
     ParticleIrrButton[0]->SetState(kButtonDown);
     ParticleIrrButton[0]->SetOn(kTRUE);  
     ParticleIrrButton[0]->Connect("Toggled(Bool_t)", "WFGUI", this, "CallSetParticleIrr()");
@@ -966,11 +931,9 @@ WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFr
     IrradiationEntry -> SetState(kFALSE);
     IrradiationEntry2 -> SetState(kFALSE);
     IrradiationEntry3 -> SetState(kFALSE);
-    
     //IrradiationLabel ->Disable(kTRUE);
     //IrradiationLabel2 ->Disable(kTRUE);
-    //IrradiationLabel3 ->Disable(kTRUE);
-    
+    IrradiationLabel3 ->Disable(kTRUE);
     DJOnButton->Connect("Toggled(Bool_t)","WFGUI",this,"SetDJOn(Bool_t)");
     DJEntry -> SetState(kFALSE);
     DJehEntry -> SetState(kFALSE);
@@ -983,12 +946,11 @@ WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFr
     CallSetDJType();
 
     //add entries
-    IrrParticleFrame->AddFrame(IrradiationLabel3, new TGLayoutHints(kLHintsLeft | kLHintsCenterY,1,5,5,1));
-    IrrParticleFrame->AddFrame(IrradiationEntry, new TGLayoutHints(kLHintsLeft | kLHintsCenterY,1,5,5,1));
-    //    IrrParticleFrame->AddFrame(DopingGLButtonGroup, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 1,5,5,1));
+    //    IrradiationOnFrame->AddFrame(IrradiationLabel3, new TGLayoutHints(kLHintsLeft,1,5,5,1));
+    IrrParticleFrame->AddFrame(IrradiationLabel3, new TGLayoutHints(kLHintsLeft | kLHintsCenterY, 1,5,5,1));
     IrrParticleFrame->AddFrame(ParticleIrrButtonGroup, new TGLayoutHints(kLHintsLeft | kLHintsTop,1,5,5,1));
+    IrrParticleFrame->AddFrame(IrradiationEntry, new TGLayoutHints(kLHintsLeft | kLHintsCenterY,1,5,5,1));
 
-    // IrradiationSetFrame->AddFrame(IrradiationEntry, new TGLayoutHints(kLHintsLeft,1,5,5,1));
 
     IrradiationOnFrame->AddFrame(IrradiationOnButton, new TGLayoutHints(kLHintsLeft | kLHintsTop,1,5,5,1));
     //    IrradiationSetFrame->AddFrame(IrradiationEntry, new TGLayoutHints(kLHintsRight,1,1,1,1));
@@ -1002,7 +964,7 @@ WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFr
 
     IrradiationOnFrame->AddFrame(AcceptorCreationButton, new TGLayoutHints(kLHintsLeft,1,5,5,1));
     IrradiationLabelFrame->AddFrame(InitialDopRemovalButton, new TGLayoutHints(kLHintsLeft,1,5,5,1));
-    // IrradiationSetFrame->AddFrame(IrradiationEntry, new TGLayoutHints(kLHintsLeft,1,5,5,1));
+
 
     DJDetailsTopFrame->AddFrame(DJEntry, new TGLayoutHints(kLHintsRight,1,1,1,1));
     DJDetailsTopFrame->AddFrame(DJLabel, new TGLayoutHints(kLHintsLeft | kLHintsExpandX,1,1,5,1));
@@ -1013,6 +975,7 @@ WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFr
     
     //add frames
     IrradiationFrame -> AddFrame(IrrParticleFrame, new TGLayoutHints(kLHintsLeft, 0,0,0,0));
+
     IrradiationValuesFrame -> AddFrame(IrradiationOnFrame, new TGLayoutHints(kLHintsLeft, 0,0,0,0));
     IrradiationValuesFrame->AddFrame(IrradiationLabelFrame,new TGLayoutHints(kLHintsLeft| kLHintsExpandX,0,0,0,0));
     IrradiationValuesFrame->AddFrame(IrradiationSetFrame,new TGLayoutHints(kLHintsRight,0,0,0,0));
@@ -1179,8 +1142,8 @@ WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFr
     /////////DIMENSIONS FRAME/////////////
     //create frames
     DimensionsFrame  = new TGGroupFrame(DetectorPropertiesFrame,"Dimensions",kHorizontalFrame);
-    DimLabelFrame = new TGVerticalFrame(DimensionsFrame);//200 60
-    DimSetFrame = new TGVerticalFrame(DimensionsFrame);
+	DimLabelFrame = new TGVerticalFrame(DimensionsFrame);//200 60
+	DimSetFrame = new TGVerticalFrame(DimensionsFrame);
     WPFrame = new TGHorizontalFrame(DimSetFrame);//50 90
 
     
@@ -1219,7 +1182,6 @@ WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFr
     /////////GAIN FRAME/////////////
     //create frames
 	GainBigFrame  = new TGGroupFrame(DetectorPropertiesFrame,"Gain",kVerticalFrame);
-	GainDopingFrame = new TGVerticalFrame(GainBigFrame);
 	GainKindFrame = new TGVerticalFrame(GainBigFrame);
 	GainShapeFrame = new TGVerticalFrame(GainBigFrame);
 	GainFrame  = new TGHorizontalFrame(GainBigFrame);
@@ -1227,14 +1189,6 @@ WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFr
 	GainLabelFrame = new TGVerticalFrame(GainFrame);
     
     //create entries
-	GainDoping = new TGComboBox(GainDopingFrame);
-	GainDoping->AddEntry(new TGString("No gain layer implant"), 0);
-	GainDoping->AddEntry(new TGString("Boron"), 1);
-	GainDoping->AddEntry(new TGString("Boron + Carbon"), 2);
-	GainDoping->AddEntry(new TGString("Gallium"), 3);
-	GainDoping->AddEntry(new TGString("Gallium + Carbon"), 4);
-	GainDoping->AddEntry(new TGString("Boron Low Diffusion"), 5);
-	
 	GainKind = new TGComboBox(GainKindFrame);
 	GainKind->AddEntry(new TGString("Gain Mechanism = OFF"), 0);
 	GainKind->AddEntry(new TGString("van Overstraeten – de Man model"), 1);
@@ -1243,7 +1197,7 @@ WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFr
 	GainKind->AddEntry(new TGString("Bologna model"), 4);
 
 	GainShape = new TGComboBox(GainShapeFrame);
-	GainShape->AddEntry(new TGString(" - "), 0);
+	GainShape->AddEntry(new TGString("No gain implant"), 0);
 	GainShape->AddEntry(new TGString("Shallow doping: linear from the electrode"), 1);
 	GainShape->AddEntry(new TGString("Deep doping: a square starting 0.6 micron deep)"), 2);
 	GainShape->AddEntry(new TGString("Epi: 3 micron deep"), 3);
@@ -1261,11 +1215,6 @@ WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFr
 	GainIndentLabel = new TGLabel(GainLabelFrame,new TGString("Gain recess (um):"));
 	
     //develop entries
-
-	GainDoping->Select(0);
-	GainDoping->Connect("Selected(Int_t)","WFGUI", this, "SetGainDoping(Int_t)");
-	GainDoping->Resize(GainDoping->GetWidth()+240, GainDoping->GetHeight()+10);
-	
 	GainKind->Select(2);
 	GainKind->Connect("Selected(Int_t)","WFGUI", this, "SetGainKind(Int_t)");
 	GainKind->Resize(GainKind->GetWidth()+240, GainKind->GetHeight()+10);
@@ -1282,7 +1231,6 @@ WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFr
 	//GainIndentLabel ->Disable(kTRUE);
 	
     //add entries
-	GainDopingFrame->AddFrame(GainDoping, new TGLayoutHints(kLHintsLeft| kLHintsTop| kLHintsExpandX, 1,1,1,1));
 	GainKindFrame->AddFrame(GainKind, new TGLayoutHints(kLHintsLeft| kLHintsTop| kLHintsExpandX, 1,1,1,1));
 	GainShapeFrame->AddFrame(GainShape, new TGLayoutHints(kLHintsLeft| kLHintsTop| kLHintsExpandX, 1,1,1,1));
     	GainSetFrame->AddFrame(Dopingentry, new TGLayoutHints(kLHintsRight | kLHintsTop,1,1,1,1));
@@ -1298,7 +1246,6 @@ WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFr
 	GainLabelFrame->AddFrame(GainIndentLabel, new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsCenterY,1,1,3,1));
 
     //add frames
-	GainBigFrame -> AddFrame(GainDopingFrame, new TGLayoutHints( kLHintsExpandX, 0,0,0,0));
 	GainBigFrame -> AddFrame(GainShapeFrame, new TGLayoutHints( kLHintsExpandX, 0,0,0,0));
 	GainBigFrame -> AddFrame(GainKindFrame, new TGLayoutHints( kLHintsExpandX, 0,0,0,0));
 	GainBigFrame -> AddFrame(GainFrame, new TGLayoutHints( kLHintsExpandX, 0,0,0,0));
@@ -1380,19 +1327,8 @@ WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFr
 
     //create entries
     //    OscOnButton = new TGCheckButton(ElectronicsFrame, "ON",0);
-    OscOnButton = new TGCheckButton(OscilloscopeLeftFrame, "ON",0);
-    
-    SCAKind = new TGComboBox(OscilloscopeRightFrame);
-    SCAKind->AddEntry(new TGString(" "), 0);
-    SCAKind->AddEntry(new TGString("TOFFEE"), 1);
-    SCAKind->AddEntry(new TGString("SCA NA62"), 2);
-
-    SCAKind->Select(0);
-    SCAKind->Connect("Selected(Int_t)","WFGUI", this, "CallSetSCA(Int_t)");
-    SCAKind->Resize(SCAKind->GetWidth()+80, SCAKind->GetHeight()+10);
-    OscOnButton->Resize(SCAKind->GetWidth(), OscOnButton->GetHeight()+10);
-    
-    //    NA62OnButton = new TGCheckButton(OscilloscopeRightFrame, "SCA NA62",0);
+        OscOnButton = new TGCheckButton(OscilloscopeLeftFrame, "ON",0);
+    NA62OnButton = new TGCheckButton(OscilloscopeRightFrame, "SCA NA62",0);
     
     CDLabel = new TGLabel(OscilloscopeLeftFrame,new TGString("Detector Cap[pF] Ind [nH]:"));
     CDEntry = new TGNumberEntry(LCFrame, valueMap["CAPACITANCE"],3,-1,TGNumberFormat::kNESReal,TGNumberFormat::kNEANonNegative,TGNumberFormat::kNELLimitMinMax,.1,40.);
@@ -1421,8 +1357,8 @@ WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFr
 
     //develop entries
     OscOnButton->Connect("Toggled(Bool_t)","WFGUI",this,"SetOscOn(Bool_t)");
-    //    NA62OnButton->Connect("Toggled(Bool_t)","WFGUI",this,"SetNA62On(Bool_t)");
-    // NA62OnButton ->SetEnabled(kFALSE);
+    NA62OnButton->Connect("Toggled(Bool_t)","WFGUI",this,"SetNA62On(Bool_t)");
+    NA62OnButton ->SetEnabled(kFALSE);
     CDEntry->SetState(kFALSE);
     LDEntry->SetState(kFALSE);
     OscBWLabel->SetMargins(0,0,4,4);
@@ -1458,8 +1394,8 @@ WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFr
     // ElectronicsFrame->AddFrame(NA62OnButton, new TGLayoutHints(kLHintsLeft | kLHintsTop ,5,5,1,5));
 
     OscilloscopeLeftFrame->AddFrame(OscOnButton, new TGLayoutHints(kLHintsLeft | kLHintsTop ,5,5,1,5));
-    //    OscilloscopeRightFrame->AddFrame(NA62OnButton, new TGLayoutHints(kLHintsLeft | kLHintsTop ,5,5,1,5));
-    OscilloscopeRightFrame->AddFrame(SCAKind, new TGLayoutHints(kLHintsLeft | kLHintsTop ,5,5,1,5));
+    OscilloscopeRightFrame->AddFrame(NA62OnButton, new TGLayoutHints(kLHintsLeft | kLHintsTop ,5,5,1,5));
+    
     OscilloscopeLeftFrame->AddFrame(CDLabel, new TGLayoutHints(kLHintsLeft | kLHintsTop,0,0,1,1));
     OscilloscopeLeftFrame->AddFrame(OscBWLabel, new TGLayoutHints(kLHintsLeft | kLHintsTop,0,0,1,1));
     OscilloscopeLeftFrame->AddFrame(ImpLabel, new TGLayoutHints(kLHintsLeft | kLHintsTop,0,0,1,1));
@@ -1645,11 +1581,10 @@ WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFr
     Gbeta = 1200000;
     BField = 0;
     SetGainKind(2);
-    SetGainDoping(0);
     SetGainShape(0);
     //changes to window
     MapSubwindows();
-    SetWindowName("Weightfield2  Build 4.5");
+    SetWindowName("Weightfield2  Build 4.3");
     Resize(GetDefaultSize());
     MapWindow();
     CallSetPart(1);
@@ -1687,7 +1622,7 @@ void WFGUI::CallCalculatePotentials() {
 	osccanvas->Clear();
 	osccanvas->Update();
 	*/
-  //  	cout << __LINE__<< endl;	
+  	cout << __LINE__<< endl;	
 	dhist->Reset();
 	whist->Reset();
 	twtothist->Reset();
@@ -1704,7 +1639,7 @@ void WFGUI::CallCalculatePotentials() {
 	SetBetaElectrons(IrradiationEntry2->GetNumber());
 	SetBetaHoles(IrradiationEntry3->GetNumber());
 
-	//	cout << __LINE__<< endl;	
+	cout << __LINE__<< endl;	
 	dwpot.SetDoping(stripdoping,bulkdoping);
 	CalculatingLabel->SetBackgroundColor(0xff0000); // set progress label color to red
 	CalculatingLabel->SetTitle("Calculating Potentials ..."); // update progess label title
@@ -1712,14 +1647,14 @@ void WFGUI::CallCalculatePotentials() {
 	//CalculatingLabel2->SetTitle("Calculating Potentials ..."); // update progess label title
 
 
-	//	cout << __LINE__<< endl;	
+	cout << __LINE__<< endl;	
 	if ( GainIndententry->GetNumber() > 0 &&( (Pitchentry->GetNumber()- Widthentry->GetNumber()-1) < GainIndententry->GetNumber() ))
 	  {  GainIndententry->SetNumber( Pitchentry->GetNumber()- Widthentry->GetNumber()-2);
 	    cout << "Gain recess too close to interstrip distance, moved to a shorter recess: " <<  GainIndententry->GetNumber() << " micron" << endl;
 	  }
 	  
 	SetGainRecess(GainIndententry->GetNumber());
-	//	cout << __LINE__<< endl;
+	cout << __LINE__<< endl;
 	//disable buttons
 
 	
@@ -1731,14 +1666,13 @@ void WFGUI::CallCalculatePotentials() {
 
 	//dwpot.SetGain(Gainentry->GetNumber());
 
-	//	cout << __LINE__<< endl;
+
 	
 	
 	WhereCut->SetLimitValues(2, (dwpot.GetXMAX()*dwpot.GetBinSizex())-2.);	
 	WhereCut2->SetLimitValues(2,(dwpot.GetXMAX()*dwpot.GetBinSizex())-2);	
 	CarriersInNumberentry->SetLimitValues(0,(dwpot.GetXMAX()*dwpot.GetBinSizex()));	
-
-	//	cout << __LINE__<< endl;
+	
 	dwpot.SetV(GetVBias(),GetVDepl());  				// set depeletion and bias voltage
 
 	for(int i=0; i<dwpot.GetXMAX(); i++) {			// reset potentials to zero as a precaution
@@ -1747,18 +1681,17 @@ void WFGUI::CallCalculatePotentials() {
 				dwpot.SetdPotential(j,i,0.0);
 			}
 		}		
-
-	//	cout << __LINE__<< endl;
+		
 	dwpot.SetBoundaryConditions(ReadOutTopFlag);		// set boundary conditions
 	dhist->GetXaxis()->SetLabelColor(0);	// set label color to white. because of multigrid approach, the tick labels of the axis are going to vary during calculation
 	dhist->GetYaxis()->SetLabelColor(0);	
 
 	//	dwpot.SetDopingProfile(this);
 
-	//	cout << __LINE__<< endl;
+	cout << __LINE__<< endl;
 	dwpot.Multigrid(this, ReadOutTopFlag); // calculate potential
 
-	//	cout << __LINE__<< endl;
+
 
 	
 	/////////////////////////////////////////
@@ -1790,20 +1723,12 @@ void WFGUI::CallCalculatePotentials() {
 }	
 /////////////////////////////////////////////////////////////////////////////////////////////
 void WFGUI::CallCalculateCurrents() {	
-  //  WFGUI* gui = (WFGUI*) arg;
 
-  // cout << __LINE__<< endl;
-  // gui->SetAllButton(0);
-  // cout <<  "calculatebutton: " << &CalculateButton << endl;
-  // if ( CalculateButton == NULL)  cout << " Calculate Button NUll pointer" << endl;
-  //gui->CalculateButton->SetEnabled(kTRUE);
-  //  gui->CalculateButton->SetEnabled(kFALSE);
-  //  cout << __LINE__<< endl;	
-  // gui->CalcPotButton->SetEnabled(kFALSE);
-  // gui->SetButton->SetEnabled(kFALSE);
+  CalculateButton->SetEnabled(kFALSE);
+  CalcPotButton->SetEnabled(kFALSE);
+  SetButton->SetEnabled(kFALSE);
   //  cout << " Batch on " << GetBatchOn() << endl;
 
-  // cout << __LINE__<< endl;	
   CalculatingLabel->SetBackgroundColor(0xff0000);				
   CalculatingLabel->SetTitle("Calculating Currents ...");	// update progress label
   //CalculatingLabel2->SetBackgroundColor(0xff0000);				
@@ -1817,7 +1742,6 @@ void WFGUI::CallCalculateCurrents() {
   tvthhist->Reset();
   BBtvthhist->Reset();
 
-  //  cout << __LINE__<< endl;	
   //initialize variables for each current loop
   
   //Setting variables from Input panels
@@ -1847,7 +1771,7 @@ void WFGUI::CallCalculateCurrents() {
   SetShTrans(ShTransEntry->GetNumber());
   //  SetGainRatio(GainRatioentry->GetNumber());
   
-  //  cout << __LINE__<< endl;	
+
 	if(bfieldon==true) 
 	  {
 	    B = BfieldEntry->GetNumber();
@@ -1869,7 +1793,7 @@ void WFGUI::CallCalculateCurrents() {
 
 	// dimMaxCarriers= 2*dwpot.Getmipcharge()+100000;
 
-	//	cout << __LINE__<< endl;	
+
 	int xRandomHit; 
 	float MaxTWCSA = 0;
 	float MaxTWBB = 0;
@@ -1998,7 +1922,7 @@ void WFGUI::CallCalculateCurrents() {
 	      if (GetBatchRandomOn() == true)
 		{
 		hity = ELECTRODE_DEPTH+(dwpot.GetYMAX()*dwpot.GetBinSizey()-2*ELECTRODE_DEPTH)*gRandom->Rndm();
-		cout << "Hit y position = " << hity << endl;
+		cout << "Hit x position = " << hity << endl;
 		}
 	      CreateChargesLaserSide(dwpot,carriers,hity,this);
 	      
@@ -2013,23 +1937,6 @@ void WFGUI::CallCalculateCurrents() {
 	      dwpot.Setmipcharge(ParticleSpecificsEntry->GetNumber()*1e3*dwpot.GetBinSizey()/IONENERGY);//MODIFIED
 	      CreateChargesXRay(dwpot,carriers, carriersin,hity,this);
 	      break;
-
-	    case TRENCH:
-	      SetParticleType(3);
-	      SetCalibFlag(0);
-	      SetConstQFlag(0);
-	      SetUniformQFlag(0);
-	      SetUserUniformQFlag(0);
-	      if (GetBatchRandomOn() == true)
-		{
-		  hity = ELECTRODE_DEPTH+(dwpot.GetYMAX()*dwpot.GetBinSizey()-2*ELECTRODE_DEPTH)*gRandom->Rndm();
-		  cout << "Hit y position = " << hity << endl;
-		}
-	      CreateChargesMipSide(dwpot,carriers,hity,this);
-	      break;
-
-	      
-	      
 
 	      
 	    default: break;
@@ -2123,7 +2030,7 @@ void WFGUI::CallCalculateCurrents() {
 		    
 		  }
 		//		    if (!GetShowCur())
-		//		cout << __LINE__<< endl;	
+		
 		Getcanvaspc()->Clear();
 		if (GetParticleType() <4 || GetParticleType() == 6 ||  GetParticleType() == 8)
 		  {
@@ -2212,6 +2119,12 @@ void WFGUI::CallCalculateCurrents() {
 	  }
 	CurrentsInfoFrame->Layout();
 	QELabel->Layout();
+	CalculateButton->SetEnabled(kTRUE);
+	CalculateButton->SetTextColor(1,kFALSE);
+	CalcPotButton->SetEnabled(kTRUE);
+	CalcPotButton->SetTextColor(1,kFALSE);
+	SetButton->SetEnabled(kTRUE);
+	SetButton->SetTextColor(1,kFALSE);
 }
 
 /////////////////////////////////////////////////////////////////////////////////////////////
@@ -3056,28 +2969,6 @@ void WFGUI::CallSetDopingBulk() {
 }
 /////////////////////////////////////////////////////////////////////////////////////////////
 /////////////////////////////////////////////////////////////////////////////////////////////
-void WFGUI::CallSetDopingGL(Int_t id) {	
-  //This is the fraction of c_boron that has beem measured for the other dopings
-
-  // c_coefficient:
-  float B = 5.5;
-  float BC = 2.1;
-  float Ga = 8.5;
-  float GAC = 2.7;
-  float BLD = 4.1;
-
-  DopingGLType = B;
-  
-  //  CalculateButton->SetEnabled(kFALSE);
-  if (id == 1 )  DopingGLType = B/B; // Boron	
-  else if (id == 2) DopingGLType = B/BC; //Boron+Carbon
-  else if (id == 3) DopingGLType = B/Ga; //Gallium
-  else if (id == 4) DopingGLType = B/GAC; //Gallium+Carbon
-  else if (id == 5) DopingGLType = B/BLD; //Boron Low Diffusion
-
-  // cout << "DopingGLType = " << DopingGLType << endl;
-}
-////////////////////////////////////////////////
 void WFGUI::CallSetParticleIrr() {	
   //set particle type
   CalculateButton->SetEnabled(kFALSE);
@@ -3178,11 +3069,9 @@ void WFGUI::SetGainShape(Int_t id)
       SetGainExp(0);
       SetGainLength(0);
       SetGainDepth(0);
-      Dopingentry->SetNumber(0);
-      SetGainDoping(0);
       //      SetGainKind(0);
       //      SamplingEntry->SetNumber(3);
-      //   cout << "Sensor without Gain layer has been selected" << endl;
+      cout << "No Gain has been selected" << endl;
     }
   
   else if (NGainShape == 1)
@@ -3210,7 +3099,6 @@ void WFGUI::SetGainShape(Int_t id)
 	cout << "Epi - 3 micron has been selected" << endl;
       }
   SetGainKind(GetGainKind());
-  SetGainDoping(GetGainDoping());
   return;
 }
 
@@ -3229,7 +3117,6 @@ void WFGUI::SetGainKind(Int_t id) {
   if (id == 0)
     {
       Dopingentry->SetNumber(0);
-      cout << "Gain mechanism off" << endl;
     }
   else if (id == 1)
     {
@@ -3257,92 +3144,20 @@ void WFGUI::SetGainKind(Int_t id) {
       cout << "Impact ionization simulation: Bologna model" << endl;
       if (GetGainShape() == 1) Dopingentry->SetNumber(1.1);
       else if (GetGainShape() == 2) Dopingentry->SetNumber(2.5);
-      else if (GetGainShape() == 3) Dopingentry->SetNumber(0.4);
-    }
+      else if (GetGainShape() == 3) Dopingentry->SetNumber(0.4);}
   
   //  cout << " Gain Type = " << GainType << endl;
 }
 
-  int WFGUI::GetGainKind() {
+int WFGUI::GetGainKind() {
   return NGainKind;
-    //  cout << " Gain Type = " << GainType << endl;
-    }
-    
+  //  cout << " Gain Type = " << GainType << endl;
+}
+
 /////////////////////////////////////////////////////////////////////////////////////////////
 
-void WFGUI::SetGainDoping(Int_t id) {
-  if (id == 0 && NGainDoping !=0)
-    {
-      GainShape->Select(0);
-      GainShape->SetEnabled(kFALSE);
-      GainDoping->Select(0);
-    }
-  if (id > 0 && NGainDoping ==0)
-    {
-      CalculateButton->SetEnabled(kFALSE);
-      GainShape->SetEnabled(kTRUE);
-      GainShape->Select(2);
-    }
-  CalculateButton->SetEnabled(kFALSE);
-  NGainDoping = id;
-  //  CalculateButton->SetEnabled(kFALSE);
-  //  SamplingEntry->SetNumber(1000);
-  if (id ==0 ) cout << "No Gain layer " << endl;
-  else if      (id == 1)  cout << "Gain layer doping: Boron" << endl;  
-  else if (id == 2)  cout << "Gain layer doping: Boron + Carbon" << endl;  
-  else if (id == 3)  cout << "Gain layer doping: Gallium " << endl;
-  else if (id == 4)  cout << "Gain layer doping: Gallium + Carbon" << endl;
-  else if (id == 5)  cout << "Gain layer doping: Carbon Low Diffusion" << endl;
-
-
-  
-  CallSetDopingGL(NGainDoping);
-}
-
-  int WFGUI::GetGainDoping() {
-  return NGainDoping;
-    //  cout << " Gain Type = " << GainType << endl;
-    }
-    
-    ///////////////////////////////////////
-void WFGUI::CallSetSCA(Int_t id) {
-
-
-  TRiseEntry->SetState(kTRUE);
-  TFallEntry->SetState(kTRUE);
-  if (id == 1)
-    {
-      
-      // TOFFEE 
-      CSAImpEntry->SetNumber(1./TOFFEE_gm);
-      // double Ci = TOFFEE_gain*TOFFEE_Cf; // 70 fF feedback
-      //	double Qfrac = 1./(1.+ GetCDet()*1E-12/Ci);
-      //	double taurise_CSA_RC = 1.0e-12*GetCDet()*GetCSAImp(); //
-      //	double taufall_CSA_RC = 1.0e-12*GetCDet()*GetCSAImp(); //
-      
-      
-      ShTransEntry->SetNumber(7.3);
-      ShNoiseEntry->SetNumber(1.6);
-      TRiseEntry->SetNumber(3);
-      TFallEntry->SetState(6);
-    }
-  
-  if (id == 2)
-    {
-      ShTransEntry->SetNumber(75);
-      ShNoiseEntry->SetNumber(1.6);
-      CSAImpEntry->SetNumber(50);
-      TRiseEntry->SetState(kFALSE);
-      TFallEntry->SetState(kFALSE);
-      
-    }
-  
-}
-
-	      
-// ///////////////////////////////////////////////////////////////////////////////////////////
 int WFGUI::CallSetPart(Int_t id) {
- 
+
   //Edge always false unless is edge //
   EdgeNumberentry -> SetState(kFALSE);
   NumberEntry -> SetState(kFALSE);
@@ -3425,7 +3240,7 @@ int WFGUI::CallSetPart(Int_t id) {
         }
 
 	ParticleSpecificsLabel2->Disable(kFALSE);
-	ParticleSpecificsLabel2->SetTextColor(gROOT->GetColor(1), kFALSE);
+	 //        ParticleSpecificsLabel2->SetTextColor(gROOT->GetColor(1), kFALSE);
 
         ParticleSpecificsEntry->SetNumber(10);
 	
@@ -3487,29 +3302,6 @@ int WFGUI::CallSetPart(Int_t id) {
 	cout << " For the absorption probability see: http://web-docs.gsi.de/~stoe_exp/web_programs/x_ray_absorption/index.php" << endl;
         return 9;
     }
-
-	 if (id == 10) {
-         radiobuttonstatus=TRENCH;
-
-	 BatchRandomButton ->SetEnabled(kTRUE);
-	 CarriersInLabel ->Disable(kTRUE);
-	 CarriersInNumberentry->SetState(kFALSE);
-	 CarriersAngleNumberentry->SetState(kFALSE);
-	 ParticleSpecificsEntry->SetNumber(75);
-	 ParticleSpecificsEntry->SetState(kTRUE);
-	 ParticleSpecificsLabel1->Disable(kFALSE);
-	 ParticleSpecificsLabel1->SetTextColor(gROOT->GetColor(1), kFALSE);
-	 ParticleSpecificsEntry->SetNumber(75);	
-	 EdgeNumberentry -> SetState(kTRUE);
-	 EdgeLabel ->Disable(kFALSE);
-
-         ParticleSpecificsEntry->SetNumber(0);
-	 //         ParticleSpecificsEntry->SetState(kFALSE);
-	 // NumberEntry->SetState(kTRUE);
-	 // NumberLabel->Disable(kFALSE);
-         cout << "Selecting Edge MIP Landau" << endl;
-         return 10;
-     }
  
 	
 	return -1;
@@ -3593,18 +3385,16 @@ void WFGUI::DrawAllGraph(int LCol = 1)
   //  cout << " DrawAllGraph 2DPlot " << GetLess2DPlot() << " LCol= " <<LCol << " GetLessPlot " << GetLessPlot()<< endl;
 
   SetStyle();
-  
-  //  cout << __LINE__<< endl;	
-  
+
   //  if(GetFileNameOn()) return;
   
-  
-  
+
+
   //  cout << wherecut << " wherecut" <<  " " << "LCol = " << LCol << endl;
+
   
-  
-  
-  
+
+
   canvasp->Clear();
   canvasw->Clear();
   //  canvasp->Update(); 
@@ -3616,7 +3406,7 @@ void WFGUI::DrawAllGraph(int LCol = 1)
   whist->SetStats(0);
   dhist->Draw("COLZ");
   
-  
+ 
   canvasw->cd();
   dwpot.DriftPal();
   whist->Draw("COLZ");
@@ -3648,7 +3438,7 @@ void WFGUI::DrawAllGraph(int LCol = 1)
   NLine1->SetLineStyle(2);
   NLine2->SetLineStyle(2);
   
-  //  cout << __LINE__<< endl;	
+
   //  cout << "Line1" << endl;
   
   NLine1->DrawLine(wherecut,0,wherecut,GetYMax());
@@ -4041,12 +3831,12 @@ void WFGUI::SetOscOn(Bool_t State) {
       ShNoiseLabel->Disable(kFALSE);
       BBNoiseLabel->Disable(kFALSE);
       BBBWLabel->Disable(kFALSE);
-      SCAKind ->SetEnabled(kTRUE);
+      NA62OnButton ->SetEnabled(kTRUE);
       
     }
   else 	
     {
-      SCAKind ->SetEnabled(kFALSE);
+      NA62OnButton ->SetEnabled(kFALSE);
       CDEntry->SetState(kFALSE);
       CDEntry->SetState(kFALSE);
       LDEntry->SetState(kFALSE);
@@ -4369,7 +4159,7 @@ void WFGUI::SetForceGain(Bool_t on) {
     IrradiationEntry3 ->SetState(kFALSE);
     //IrradiationLabel->Disable(kTRUE);
     //IrradiationLabel2->Disable(kTRUE);
-    // IrradiationLabel3->Disable(kTRUE);
+    IrradiationLabel3->Disable(kTRUE);
     IrradiationOnButton ->SetOn(kFALSE, kFALSE);
     IrradiationOnButton ->SetEnabled(kFALSE);
     AcceptorCreationButton ->SetOn(kFALSE, kFALSE);
@@ -4384,7 +4174,7 @@ void WFGUI::SetForceGain(Bool_t on) {
     DJOnButton ->SetOn(kFALSE, kFALSE);
     DJOnButton ->SetEnabled(kFALSE);
     
-    IrradiationOnButton ->SetTextColor(1, kFALSE);
+    //    IrradiationOnButton ->SetTextColor(1, kFALSE);
   }
   else
     {
@@ -4447,7 +4237,7 @@ void WFGUI::SetCCEOn(Bool_t on) {
         ForceGainButton ->SetEnabled(kFALSE);
         //IrradiationLabel->Disable(kFALSE);
         //IrradiationLabel2->Disable(kFALSE);
-	// IrradiationLabel3->Disable(kFALSE);
+        IrradiationLabel3->Disable(kFALSE);
         SetFluence(IrradiationEntry->GetNumber());
         SetBetaElectrons(IrradiationEntry2->GetNumber());
         SetBetaHoles(IrradiationEntry3->GetNumber());
@@ -4458,13 +4248,13 @@ void WFGUI::SetCCEOn(Bool_t on) {
 	  {
 	  IrradiationEntry ->SetState(kFALSE);
 	  //IrradiationLabel->Disable(kTRUE);
-	  //IrradiationLabel3->Disable(kTRUE);
+	  IrradiationLabel3->Disable(kTRUE);
 	  }
 
         IrradiationEntry2 ->SetState(kFALSE);
         IrradiationEntry3 ->SetState(kFALSE);
 	if (!GetDJOn()) ForceGainButton ->SetEnabled(kTRUE);
-	//	if (!GetDJOn()) ForceGainButton->SetTextColor(1, kFALSE);
+	if (!GetDJOn()) ForceGainButton->SetTextColor(1, kFALSE);
 	//        IrradiationEntry->SetNumber(0);
 	//        IrradiationLabel->Disable(kTRUE);
 	// IrradiationLabel2->Disable(kTRUE);
@@ -4478,7 +4268,7 @@ void WFGUI::SetAcceptorCreation(Bool_t on) {
       if (on == true){
         IrradiationEntry ->SetState(kTRUE);
         //IrradiationLabel->Disable(kFALSE);
-	//IrradiationLabel3->Disable(kFALSE);
+	IrradiationLabel3->Disable(kFALSE);
         SetFluence(IrradiationEntry->GetNumber());
     }
     else
@@ -4487,7 +4277,7 @@ void WFGUI::SetAcceptorCreation(Bool_t on) {
 	  {
 	  IrradiationEntry ->SetState(kFALSE);
 	  //IrradiationLabel->Disable(kTRUE);
-	  //IrradiationLabel3->Disable(kTRUE);
+	  IrradiationLabel3->Disable(kTRUE);
 	  }
     }
   
@@ -4499,7 +4289,7 @@ void WFGUI::SetInitialDopRemoval(Bool_t on) {
       if (on == true){
         IrradiationEntry ->SetState(kTRUE);
         //IrradiationLabel->Disable(kFALSE);
-	//IrradiationLabel3->Disable(kFALSE);
+	IrradiationLabel3->Disable(kFALSE);
         SetFluence(IrradiationEntry->GetNumber());
     }
     else
@@ -4508,7 +4298,7 @@ void WFGUI::SetInitialDopRemoval(Bool_t on) {
 	  {
 	  IrradiationEntry ->SetState(kFALSE);
 	  //IrradiationLabel->Disable(kTRUE);
-	  //IrradiationLabel3->Disable(kTRUE);
+	  IrradiationLabel3->Disable(kTRUE);
 	  }
     }
 }
@@ -4538,7 +4328,7 @@ void WFGUI::SetDJOn(Bool_t on) {
     DJEntry ->SetState(kFALSE);
     DJehEntry ->SetState(kFALSE);
     if (!GetCCEOn()) ForceGainButton ->SetEnabled(kTRUE);
-    // if (!GetCCEOn()) ForceGainButton->SetTextColor(1, kFALSE);
+    if (!GetCCEOn()) ForceGainButton->SetTextColor(1, kFALSE);
     DJLabel->Disable(kTRUE);
     DJehLabel->Disable(kTRUE);
 
@@ -4765,156 +4555,84 @@ void WFGUI::CloseWindow() // Got close message for this MainFrame. Terminates th
   gApplication->Terminate();
 }
 /////////////////////////////////////////////////////////////////////////////////////////////
-void WFGUI::SaveData(){
-  std::cout << "Saving data" << std::endl;
-
-  UserValues["BBBW"] = BBBWEntry->GetNumber();
-  UserValues["BBGAIN"] = BBGainEntry->GetNumber();
-  UserValues["BBVTH"] = BBVthEntry->GetNumber(); 
-  UserValues["BB_IMP"] = BBImpEntry->GetNumber(); 
-  UserValues["BB_NOISE"] = BBNoiseEntry->GetNumber();
-  UserValues["BETA_ELECTRONS"] = IrradiationEntry2->GetNumber(); 
-  UserValues["BETA_HOLES"] = IrradiationEntry3->GetNumber(); 
-  UserValues["BIAS_VOLTAGE"] = Biasentry->GetNumber(); 
-  UserValues["CALIB"] = GetCalibEntry();
-  UserValues["CAPACITANCE"] = CDEntry->GetNumber();
-  UserValues["DEPL_VOLTAGE"] = Depletionentry->GetNumber();
-  UserValues["DETECT_HEIGHT"] = YMAXentry->GetNumber();
-  UserValues["DOP_LEV"] = Dopingentry->GetNumber(); 
-  UserValues["DOUBLEJUNCTION"] = DJEntry->GetNumber(); 
-  UserValues["GAIN_LYR_RSS"] = GainIndententry->GetNumber(); 
-  UserValues["GAIN_SCL"] = Gainentry->GetNumber(); 
-  UserValues["HE_GAIN_RAT"] = 0; 
-  UserValues["IMPEDANCE"] = CSAImpEntry->GetNumber();
-  UserValues["INDUCTANCE"] = LDEntry->GetNumber();
-  UserValues["IRRADIATION"] = IrradiationEntry->GetNumber();
-  UserValues["NA_OVER_ND"] = DJehEntry->GetNumber(); 
-  UserValues["NUMBERP"] = GetNumberP(); 
-  UserValues["OSCOPE_BW"] = OscBWEntry->GetNumber(); 
-  UserValues["PRECISION"] = GetPrecision(); 
-  UserValues["SAMPLING"] = GetSampling(); 
-  UserValues["SET_RANGE"] = 10;
-  UserValues["SHPR_DCY_TIME"] = TFallEntry->GetNumber(); 
-  UserValues["SHPR_INT_TIME"] = TRiseEntry->GetNumber(); 
-  UserValues["SHPR_NOISE"] = ShNoiseEntry->GetNumber(); 
-  UserValues["SHPR_TRANS"] = ShTransEntry->GetNumber(); 
-  UserValues["STEPX"] = StepxEntry->GetNumber(); 
-  UserValues["STEPY"] = StepyEntry->GetNumber(); 
-  UserValues["STRIP_NUMB"] = XMAXentry->GetNumber(); 
-  UserValues["STR_PITCH"] = Pitchentry->GetNumber(); 
-  UserValues["STR_WIDTH"] = Widthentry->GetNumber();
-  UserValues["TEMPERATURE"] = TempEntry->GetNumber(); 
-  UserValues["USERQ"] = 73; 
-  UserValues["VTH"] = CSAVthEntry->GetNumber(); 
-  UserValues["YPOSITION"] = EdgeNumberentry->GetNumber(); 
-
-
-  std::ofstream myfile;
-  string fname = "./";
-  fname+=SaveFileName->GetText();
-  myfile.open(fname, ios::out);
-  for (auto it = UserValues.begin(); it!=UserValues.end(); it++){
-    myfile << it->first << "  " << it->second <<  "\n";
-    myfile.flush();
-  }
-  myfile.flush();
-  myfile.close();
-}
-/////////////////////////////////////////////////////////////////////////////////////////////
 TThread* WFGUI::GetPotentialThread() {
 	return PotentialThread;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////
 void* WFGUI::StartPotentialCalcTh(void* arg)
 {
-  //  cout << __LINE__<< endl;	
-  
-  WFGUI* gui = (WFGUI*) arg;
-  
-  //  cout << __LINE__<< endl;	
-  gui->SetAllButton(0);
-  gui->CallCalculatePotentials();
-  
-  gui->ThreadstopPotential();
-  //  cout << __LINE__<< endl;	
-  gui->CalculatingLabel->SetTitle("Drawing...");
-  gui->FillHist(); // does not increase memory
-  gui->DrawAllGraph(1);
-  //  cout << __LINE__<< endl;	
+  cout << __LINE__<< endl;	
 
-  //	sleep(1);
-  if (gui->GetGainon()==true  && fabs(gui->GetStepy()-0.1)>0.06 )
-    {
-      cout << "Calculation done with step in y = " << gui->GetStepy() << endl;
-      gui->SetStepy(0.1);
-      gui->StepyEntry->SetNumber(0.1);
-      cout << "Sensor with gain layer, y-step has to be 0.1 micron" << endl;
-      cout << "Calculate the potential again" << endl;
-      gui->CalculateButton->SetEnabled(kFALSE);
-      gui->CalcPotButton->SetEnabled(kTRUE);
-      gui->SetButton->SetEnabled(kTRUE);
-      
-    }
-  
-  else gui->SetAllButton(1);
-  //	if (GetGainon()=false )
-  //else
-  // {
-  //   cout <<  StepYButton[1]->GetState() << "Buttom Stepy 1 "  << endl;
-  // }
-  //gui->DrawFieldsAbs();
-  
-  gui->CalculatingLabel->SetBackgroundColor(0x00ff00);	// when calculation completed, set progress label color to green
-  gui->CalculatingLabel->SetTitle("Done");
+	WFGUI* gui = (WFGUI*) arg;
 
-  // Added saving of canvases
-  TFile *outputFile = new TFile("potentials.root", "RECREATE");
-  gui->Getcanvasp()->Write("potentials");
-  gui->Getcanvaspc()->cd(1);
-  gui->Getcanvaspc()->Write("eh_pairs");
-  gui->Getcanvaspc()->cd(2);
-  gui->Getcanvaspc()->Write("potential_currents");
-  gui->Getcanvasw()->Write("weighting");
-  outputFile->Write();
-  outputFile->Close();
+	cout << __LINE__<< endl;	
+	gui->SetAllButton(0);
+	gui->CallCalculatePotentials();
+	gui->ThreadstopPotential();
+	cout << __LINE__<< endl;	
+	gui->CalculatingLabel->SetTitle("Drawing...");
+	gui->DrawAllGraph(1);
+	cout << __LINE__<< endl;	
+	
+	//	sleep(1);
+	if (gui->GetGainon()==true  && fabs(gui->GetStepy()-0.1)>0.06 )
+	      {
+		cout << "Calculation done with step in y = " << gui->GetStepy() << endl;
+		gui->SetStepy(0.1);
+		gui->StepyEntry->SetNumber(0.1);
+		cout << "Sensor with gain layer, y-step has to be 0.1 micron" << endl;
+		cout << "Calculate the potential again" << endl;
+		gui->CalculateButton->SetEnabled(kFALSE);
+		gui->CalcPotButton->SetEnabled(kTRUE);
+		gui->SetButton->SetEnabled(kTRUE);
 
-  
-  return NULL;	
+	      }
+
+	else gui->SetAllButton(1);
+	//	if (GetGainon()=false )
+	//else
+	// {
+	//   cout <<  StepYButton[1]->GetState() << "Buttom Stepy 1 "  << endl;
+	// }
+	//gui->DrawFieldsAbs();
+	
+	gui->CalculatingLabel->SetBackgroundColor(0x00ff00);	// when calculation completed, set progress label color to green
+	gui->CalculatingLabel->SetTitle("Done");
+	
+	return NULL;	
 }
 /////////////////////////////////////////////////////////////////////////////////////////////
 Int_t WFGUI::ThreadstartPotential(){
 
   //	CallBoundaryConditions();
-  //  	cout << __LINE__<< endl;
-	WFGUI* arg = this;
-	//	StartPotentialCalcTh((void*) arg);
+  	cout << __LINE__<< endl;
 	
-	if(!PotentialThread && CallBoundaryConditions() == 0 ){
+	 if(!PotentialThread && CallBoundaryConditions() == 0 ){
 		//stopped=false;
-
-	  //		cout << __LINE__<< endl;	
+		WFGUI* arg = this;
+		cout << __LINE__<< endl;	
 		PotentialThread= new TThread("memberfunction",
-			            (void(*) (void *))&StartPotentialCalcTh,(void*) arg);
-		//		cout << __LINE__<< endl;	
-		PotentialThread->Run();
-		//		cout << __LINE__<< endl;	
+			            (void(*) (void *))&StartPotentialCalcTh,
+			            (void*) arg);
+		cout << __LINE__<< endl;	
+		// PotentialThread->Run();
+		cout << __LINE__<< endl;	
 			
 		return 0;
 	 }
-	//	cout << __LINE__<< endl;	
-	//	return 1;
-		return 0;
+	cout << __LINE__<< endl;	
+	return 1;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////
 Int_t WFGUI::ThreadstopPotential(){
-  // FillHist(); // does not increase memory
+  FillHist(); // does not increase memory
 
 
 	//	if(fieldyes==true) DrawFieldHist();
 	if(PotentialThread){
 	  //Nicolo
 	  // stopped=true;
-	  //	  	cout << __LINE__<< endl;	
+	  	cout << __LINE__<< endl;	
 		TThread::Delete(PotentialThread);
 		//	delete PotentialThread; // dont' remove it crashes
 			PotentialThread=0;
@@ -4924,33 +4642,18 @@ Int_t WFGUI::ThreadstopPotential(){
 }
 /////////////////////////////////////////////////////////////////////////////////////////////
 void* WFGUI::StartCurrentsCalcTh(void* arg)
-{
-  //  cout << __LINE__<< endl;	
-  WFGUI* gui = (WFGUI*) arg;
-  
-  //  cout << __LINE__<< endl;
-  if (gui == NULL) cout << " gui pointer null" << endl;
-  gui->CallCalculateCurrents();
-  //  cout << __LINE__<< endl;	
-  gui->ThreadstopCurrents();
-  //  cout << __LINE__<< endl;	
-  // gui->stopped=false; NC
-
-  // Added saving of canvases
-  TFile *outputFile = new TFile("currents.root", "RECREATE");
-  gui->Getcurcanvas()->Write("currents");
-  gui->Getosccanvas()->Write("oscilloscope");
-  outputFile->Write();
-  outputFile->Close();
-
-  return NULL;	
+{	
+	WFGUI* gui = (WFGUI*) arg;
+	gui->CallCalculateCurrents();
+	gui->ThreadstopCurrents();
+	gui->stopped=false;
+	return NULL;	
 }
 /////////////////////////////////////////////////////////////////////////////////////////////
 Int_t WFGUI::ThreadstartCurrents(){
 	if(!CurrentsThread){
 		//stopped=false;
 		WFGUI* arg = this;
-		//		cout << __LINE__<< endl;	
 		CurrentsThread= new TThread("memberfunction",
 			            (void(*) (void *))&StartCurrentsCalcTh,
 			            (void*) arg);
@@ -5066,7 +4769,7 @@ double WFGUI::GetGainRatio() {
 void WFGUI::SetGainLayerVdepletion(double Doping) {
   double GainLayerV=Doping*ECHARGE/(2*EPSILON*EPSILONR)*1e-12*GetGainLength()*GetGainLength();
   double DopingRem = 1;
-  if (GetInitialDopRemoval()) DopingRem = InitialDopingRem(GetDopinggainlayerValue()*1e-6 , GetFluence(), 1);
+  if (GetInitialDopRemoval()) DopingRem = InitialDopingRem(GetDopinggainlayerValue()*1e-6 , GetFluence() );
   GainLayerVdepletion=GainLayerV*DopingRem; // E = V/d
   SetGainRegionVdepletion();
 }
@@ -5146,7 +4849,6 @@ void WFGUI::SetAllButton(int NN) {
     {
       if(!GetLessPlot())
 	{
-	  //	  cout << __LINE__<< endl;	
 	  OnStripsButton->SetEnabled(kTRUE);
 	  BetweenStripsButton->SetEnabled(kTRUE);
 	  ExButton->SetEnabled(kTRUE);
@@ -5165,15 +4867,12 @@ void WFGUI::SetAllButton(int NN) {
     }
   else
     {
-      //	cout << __LINE__<< endl;	
 	OnStripsButton->SetEnabled(kFALSE);
 	BetweenStripsButton->SetEnabled(kFALSE);
 	ExButton->SetEnabled(kFALSE);
 	EyButton->SetEnabled(kFALSE);
-	//		cout << __LINE__<< endl;	
 	//	EtotButton->SetEnabled(kFALSE);
 	CalculateButton->SetEnabled(kFALSE);
-	//	cout << __LINE__<< endl;	
 	CalcPotButton->SetEnabled(kFALSE);
 	OnStripsButton2->SetEnabled(kFALSE);
 	BetweenStripsButton2->SetEnabled(kFALSE);
@@ -5609,7 +5308,7 @@ float WFGUI::Getygainlayerhigh(){
    else return GetGainDepth()+GetGainLength();
 }
 //////////////////////////////////////////////////////////////////////////////////////
-double WFGUI::InitialDopingRem(double density, double fluence, int type)
+double WFGUI::InitialDopingRem(double density, double fluence)
 {
   //  double Frac = 0;
   // density N/cm3 
@@ -5619,7 +5318,7 @@ double WFGUI::InitialDopingRem(double density, double fluence, int type)
   
   // if (density < 0) c = 2e-9*pow(fabs(density), -0.38); // protons+neutrons
   //  if (density < 0) c = 30e-9*pow(fabs(density), -0.46); // neutrons
-    if (ParticleIrrType == 0)
+    if (ParticleIrrType ==0)
       {
 	//	if (density < 0) c = 10e-9*pow(fabs(density), -0.45); // neutrons  new
 		if (density < 0) c = 9e-7*pow(fabs(density), -0.57); // neutrons  after TREDI
@@ -5632,9 +5331,9 @@ double WFGUI::InitialDopingRem(double density, double fluence, int type)
     //  if (density < 0) c = 0.08e-9*pow(fabs(density), -0.285); // protons
   //
   //  if (density < 0) c = 0.015*1e-14; // from the signal
+							
 
-    if (type == 1)  c = c/DopingGLType; // coefficient to account for B, BC, Ga, GaC, BLD
-    //   cout << "Density = " << density << " [n/cm3];  c = "<< c << "\n";
+    cout << " density = " << density << " c= "<< c << " Fluence = " << fluence << endl;
     //   c  *= 2.;
     return exp(-c*fluence);
   
