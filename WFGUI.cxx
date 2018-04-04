@@ -549,19 +549,25 @@ WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFr
     CalculateButton = new TGTextButton(ButtonPotFrame,"Currents");
     StopButton = new TGTextButton(ButtonPotFrame," Stop ");
     ExitButton = new TGTextButton(ButtonPotFrame," Exit ");
+
+    ///////////////////////////////////////////////////////////
     // Saving interface
-    SaveButton = new TGTextButton(ButtonPotFrame, " Save ");
-    SaveFileName = new TGTextEntry(ButtonPotFrame, new TGTextBuffer(5), kSunkenFrame | kDoubleBorder | kOwnBackground);
+
+    SaveFrame = new TGGroupFrame(ControlFrame,"Configuration file",kHorizontalFrame);   
+    SaveButton = new TGTextButton(SaveFrame, " Save ");
+    SaveFileName = new TGTextEntry(SaveFrame, new TGTextBuffer(5), kSunkenFrame | kDoubleBorder | kOwnBackground);
     SaveFileName->SetText("sampleout.dat");
     SaveFileName->SetMaxLength(4096);
     SaveFileName->SetAlignment(kTextLeft);
-    SaveFileName->MoveResize(40, 1, 160, 15);
+    SaveFileName->MoveResize(56, 80, 150, 22);
     SaveFileName->SetState(kTRUE);
     SaveButton->Associate(this);
     SaveButton->SetTextColor(1, kFALSE);
     SaveButton->Connect("Clicked()", "WFGUI", this, "SaveData()");
     SaveButton->SetEnabled(kTRUE);
 
+    SaveFrame->AddFrame(SaveButton, new TGLayoutHints(kLHintsLeft | kLHintsTop,1,1,1,1));
+    SaveFrame->AddFrame(SaveFileName, new TGLayoutHints(kLHintsLeft | kLHintsTop,1,1,1,1));
 
     //develop entries
     SetButton->Associate(this);
@@ -673,7 +679,7 @@ WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFr
     ////////////////////////////////////////////
     /////////OUTPUT FILE FRAME/////////////
     //create frames
-    NameFrame = new TGGroupFrame(ControlFrame,"Output File",kHorizontalFrame);
+    NameFrame = new TGGroupFrame(ControlFrame,"Output files for signals",kHorizontalFrame);
     
     //create entries
     FileNameOnButton = new TGCheckButton(NameFrame,"ON",0);
@@ -696,6 +702,7 @@ WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFr
     NameFrame->AddFrame(FileNameEntry, new TGLayoutHints(kLHintsRight| kLHintsTop | kLHintsExpandX,1,1,1,1));
 	
     //add frames
+    ControlFrame->AddFrame(SaveFrame, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX ,1,1,1,1));
     ControlFrame->AddFrame(NameFrame, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX ,1,1,1,1));
     ////////////////////////////////////////////
 
@@ -4789,10 +4796,10 @@ void WFGUI::SaveData(){
   UserValues["INDUCTANCE"] = LDEntry->GetNumber();
   UserValues["IRRADIATION"] = IrradiationEntry->GetNumber();
   UserValues["NA_OVER_ND"] = DJehEntry->GetNumber(); 
-  UserValues["NUMBERP"] = GetNumberP(); 
+  UserValues["NUMBERP"] = NumberEntry->GetNumber(); 
   UserValues["OSCOPE_BW"] = OscBWEntry->GetNumber(); 
-  UserValues["PRECISION"] = GetPrecision(); 
-  UserValues["SAMPLING"] = GetSampling(); 
+  UserValues["PRECISION"] = PrecisionEntry->GetNumber(); 
+  UserValues["SAMPLING"] = SamplingEntry->GetNumber(); 
   UserValues["SET_RANGE"] = 10;
   UserValues["SHPR_DCY_TIME"] = TFallEntry->GetNumber(); 
   UserValues["SHPR_INT_TIME"] = TRiseEntry->GetNumber(); 

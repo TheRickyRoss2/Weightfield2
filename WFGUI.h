@@ -201,6 +201,7 @@ class WFGUI : public TGMainFrame {
 
 		// SettingsFrame contains:
 		TGGroupFrame *NameFrame;
+		TGGroupFrame *SaveFrame;
 		TGGroupFrame *BatchFrame;
 		TGHorizontalFrame *BatchOnButtonFrame;
 		TGHorizontalFrame *BatchEventNumberFrame;
