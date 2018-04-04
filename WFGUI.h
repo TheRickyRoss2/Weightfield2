@@ -46,7 +46,8 @@ typedef enum ParticleRadioButtonStatus_enum {
 	USR_CHARGE,
 	CALIB,
 	EDGE,
-	XRAY
+	XRAY,
+	TRENCH
 }ParticleRadioButtonStatus;
 
 class WFGUI : public TGMainFrame {
@@ -92,6 +93,7 @@ class WFGUI : public TGMainFrame {
 		int DetType;
 		int ParticleType;
 		int ParticleIrrType;
+		float DopingGLType;
 		int carriersin;
 		float ygain;
 		float GainRatio;	       
@@ -121,13 +123,14 @@ class WFGUI : public TGMainFrame {
 		int EvNumber;					//total number of events
 		int ThisEvent;					//
 		int GainRecess;					//
+		int NGainDoping;
 		int NGainKind;
 		int NGainShape;
 		double GainShapeDepth;
 		double GainShapeExp;
 		double GainShapeLength;
-	  std::map<std::string, double> uservalues;
-    int testint;
+    std::map<std::string, double> UserValues;
+		
 		float YGLow;
 		float YGHigh;
 		double angle;
@@ -231,14 +234,17 @@ class WFGUI : public TGMainFrame {
         TGHorizontalFrame *ParticlesSpecificsLabelFrame;
         TGVerticalFrame *ParticlesSpecificsSetFrame;
         TGComboBox *ParticleKind;
+	TGComboBox *SCAKind;
 
 
         TGVerticalFrame *GainKindFrame;
 	TGVerticalFrame *GainShapeFrame;
+	TGVerticalFrame *GainDopingFrame;
 	//        TGHorizontalFrame *GainSpecificsFrame;
         //TGHorizontalFrame *GainSpecificsLabelFrame;
         // TGVerticalFrame *GainSpecificsSetFrame;
-        TGComboBox *GainKind;
+        TGComboBox *GainDoping;
+	TGComboBox *GainKind;
 	TGComboBox *GainShape;
 
         //TGLabel *ChargeLabel;
@@ -328,6 +334,8 @@ class WFGUI : public TGMainFrame {
 		TGHorizontalFrame *DopStripFrame;
 		TGButtonGroup *DopStripButtonGroup;
 		TGButtonGroup *ParticleIrrButtonGroup;
+		TGButtonGroup *DopingGLButtonGroup;
+		
 		TGButtonGroup *DopBulkButtonGroup;
 		TGButtonGroup *StepYButtonGroup;
 		TGButtonGroup *StepXButtonGroup;
@@ -409,6 +417,7 @@ class WFGUI : public TGMainFrame {
 		TGRadioButton *BulkButton[2];
 		TGRadioButton *StripButton[2];
 		TGRadioButton *ParticleIrrButton[2];
+		TGRadioButton *DopingGLButton[2];
 		TGRadioButton *StepYButton[2];
 		TGRadioButton *StepXButton[2];
 		TGRadioButton *DJButton[2];
@@ -516,9 +525,8 @@ class WFGUI : public TGMainFrame {
 	
 	TGLabel *EventsLabel;
 	TGTextButton *CalculateButton;
-	TGTextButton *SaveButton;
+	// TGButton *CalculateButton;
 	TGTextButton *SetButton;
-  TGTextButton *fSaveButton;
 	TGTextButton *StopButton;
 	TGTextButton *ExitButton;
 	TGTextButton *BetweenStripsButton;
@@ -535,10 +543,11 @@ class WFGUI : public TGMainFrame {
 	TGTextButton *DrawCutsUserEntry;
 	TGTextButton *DrawCutsUserEntry2;
 	TGTextButton *FileNameButton;
-        TGLabel *FileNameLabel;
+  TGLabel *FileNameLabel;
+  // Added saving gui buttons
 	TGTextEntry *FileNameEntry;
-	TGTextEntry *SaveFileName;
-  string filename;
+  TGTextEntry *SaveFileName;
+  TGTextButton *SaveButton;
 	
 	//TGComboBox *SetAlpha;		//!!!! original particle selection
 	TGHorizontalFrame *fSliceExtentL;
@@ -624,11 +633,14 @@ class WFGUI : public TGMainFrame {
 		void CallCalculatePotentials();			// Method to Calculate Potentials
 		void CallSetDopingBulk();					// Method to set bulk n-type, strips p-type
 		void CallSetParticleIrr();					// Method to set irradiaiotn particle
-		
+		void CallSetDopingGL(Int_t);					// Method to set irradiaiotn particle
+		void CallSetSCA(int);					// Method to set irradiaiotn particle
 		void CallSetReadOut();					// Method to set bulk p-type, strips n-type
 		void CallSetDopingStrip();// readout
 		void SetGainKind(Int_t);
 		int GetGainKind();
+		void SetGainDoping(Int_t);
+		int GetGainDoping();
 		void SetGainShape(Int_t);
 		int GetGainShape();
 		void SetGainDepth(double);
@@ -644,8 +656,9 @@ class WFGUI : public TGMainFrame {
 		int CallBoundaryConditions();			// Method to set boundary conditions
 		void CallCalculateFields();				// Method to calculate fields
 		void CallCalculateCurrents();				// Method to calculate currents
+		//		static void* StartPotentialCalcTh(void*);
 		void CloseWindow();						// Method to close window
-    void SaveData();
+    void SaveData(); // Method to save plots
 		TH2F* Getwhist();						// Method which returns whist
 		TH2F* Getdhist();						// Method which returns dhist
 		TH2F* Getchist();						// Method which returns dhist
@@ -715,7 +728,7 @@ class WFGUI : public TGMainFrame {
 		TGHProgressBar* GetProgressBar();
 		double GetB();
 		double GetT();
-		double InitialDopingRem(double, double);
+		double InitialDopingRem(double, double, int);
 		
 		void SetQLabel(const char*,const char*,const char*,const char*,const char*,const char*,const char*,const char*,const char*);
 		void SetAngleLabel(const char*, const char*);

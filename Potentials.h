@@ -88,7 +88,7 @@ class Potentials {
 		void FixRestriktor(int**);
 		void Prolongation(bool);				// method to prolongate potentials to finer grid with XMAX*2-1
 		void Iteration(void*);	// method for iterative calculation
-		void SetDopingProfile(void*);	// method to fill the doping profile
+		void SetDopingProfile(void*, int);	// method to fill the doping profile
 		void Smoothing();	// method to smooth the potential
 		void Multigrid(void*, bool);	// method for multigrid calculation
 		void DriftPal(); 							// Color palette for driftfield (linear)

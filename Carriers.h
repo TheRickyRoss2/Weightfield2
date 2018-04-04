@@ -27,7 +27,8 @@
 // FBK: Dexp = 0, GAINDEPTH = +0.1, GAINLENGHT = 1 Doping 4.5 ==> 34V depletion
 // CNM: Dexp = 0, GAINDEPTH = 0.3, GAINLENGHT = 2, Doping 1.3 ==> 35V V depletion Note: N*d^2 = 4.5
 #define CNMGAINDEPTH 0. //0
-#define CNMGAINLENGTH 4 
+//#define CNMGAINLENGTH 4
+#define CNMGAINLENGTH 2
 //#define CNMGAINLENGHT 2
 #define CNMDexp 1 //1 // needs to be 0!!! otherwise simulation does not work well
 // FBK
@@ -119,6 +120,7 @@ class Carriers {
 void CreateCharges(Potentials &,Carriers *,int, void*);							// create charges along path of particle
 void CreateChargesAlphaTop(Potentials &pot, Carriers *carriers, int hit, void*);				//creates alpha particles
 void CreateChargesAlphaBottom(Potentials &pot, Carriers *carriers, int hit, void*);
+void CreateChargesMipSide(Potentials &pot, Carriers *carriers, int hit, void*);
 void CreateChargesLaserSide(Potentials &pot, Carriers *carriers, int hit, void*);
 void CreateChargesXRay(Potentials &pot, Carriers *carriers, int hitx,int hity, void*);
 void CalculateCurrents(Potentials &,Field **, Field**, Carriers *, void*, int);		// calculate currents
