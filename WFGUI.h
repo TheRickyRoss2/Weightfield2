@@ -81,6 +81,7 @@ class WFGUI : public TGMainFrame {
 		bool UniformQFlag;
 		bool UserUniformQFlag;
 		bool ReadOutTopFlag;
+		int Eflag=0;
 		unsigned char stripdoping;
 		unsigned char  bulkdoping;
 
@@ -224,7 +225,8 @@ class WFGUI : public TGMainFrame {
 		TGHorizontalFrame *DJDetailsBottomFrame;
 		
 		// SettingsFrame2 contains:
-		TGGroupFrame *ControlFrame;
+		//		TGGroupFrame *ControlFrame;
+		TGVerticalFrame *ControlFrame;
 		TGVerticalFrame *RightFrame;	
 
 		//ControlFrame contains 
@@ -544,11 +546,15 @@ class WFGUI : public TGMainFrame {
 	TGTextButton *DrawCutsUserEntry;
 	TGTextButton *DrawCutsUserEntry2;
 	TGTextButton *FileNameButton;
-  TGLabel *FileNameLabel;
+	TGLabel *FileNameLabel;
   // Added saving gui buttons
 	TGTextEntry *FileNameEntry;
-  TGTextEntry *SaveFileName;
-  TGTextButton *SaveButton;
+	TGTextEntry *SaveFileName;
+	TGTextButton *SaveButton;
+	TGTextButton *LoadButton;
+
+	TGTextEntry *SaveFileName1;
+	TGTextButton *SaveButton1;
 	
 	//TGComboBox *SetAlpha;		//!!!! original particle selection
 	TGHorizontalFrame *fSliceExtentL;
@@ -659,7 +665,9 @@ class WFGUI : public TGMainFrame {
 		void CallCalculateCurrents();				// Method to calculate currents
 		//		static void* StartPotentialCalcTh(void*);
 		void CloseWindow();						// Method to close window
-    void SaveData(); // Method to save plots
+		void SaveData(); // Method to save plots
+		void LoadData(); // Method to save plots
+		void SaveGraph(); // Method to save graph
 		TH2F* Getwhist();						// Method which returns whist
 		TH2F* Getdhist();						// Method which returns dhist
 		TH2F* Getchist();						// Method which returns dhist

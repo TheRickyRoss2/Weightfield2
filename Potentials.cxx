@@ -158,8 +158,8 @@ void Potentials::SetDoping(unsigned char s, unsigned char b) {
 //////////////////////////////////////////////////////////////////////
 void Potentials::SetPitchWidthXY(int dimy, int nstrip,double p, double w, double Stepx, double Stepy )
 {
-
-  //  cout << " SetPitch = " << dimy << " " << nstrip << " " << p << " " << w << " Stepx " << Stepx << " stepy " << Stepy << endl;
+  //  Stepy = 0.1;
+  //  cout << " In Potential SetPitch = " << dimy << " " << nstrip << " " << p << " " << w << " Stepx " << Stepx << " stepy " << Stepy << endl;
   ref=0;
   pitch=p; // here it's in micron
   width=w; // here it's in micron
@@ -212,6 +212,8 @@ void Potentials::SetPitchWidthXY(int dimy, int nstrip,double p, double w, double
 
 
   BinSizey = 1.*dimy/(1.*YMAX);
+  //  BinSizey = Stepy;
+  
   BinSizex = 1.*count*pitch/(1.*XMAX);
 
  //here we change from micron to bins
@@ -224,7 +226,7 @@ void Potentials::SetPitchWidthXY(int dimy, int nstrip,double p, double w, double
   pitch=(int) (pitch/BinSizex); // here it's in # bin
   width= (int) (width/BinSizex); // here it's in # bin
   
-  //   cout << "Bin size x = " << GetBinSizex() << " micron " << endl;
+  cout << "Bin size y = " << GetBinSizey() << " micron " << endl;
   // cout << "Bin size y = " << GetBinSizey() << " micron " << endl;
   //  cout << "Number of bin: X = " << XMAX<< ", Y =  " << YMAX << endl;
 
@@ -256,7 +258,7 @@ void Potentials::SetPitchWidthXY(int dimy, int nstrip,double p, double w, double
     }
   }
 
-
+  //  cout << " In Potential end SetPitch = " << dimy << " " << nstrip << " " << p << " " << w << " Stepx " << Stepx << " stepy " << Stepy << endl;
 
 }
 //////////////////////////////////////////////////////////////////////

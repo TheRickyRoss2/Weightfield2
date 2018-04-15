@@ -32,7 +32,7 @@
 //#define CNMGAINLENGHT 2
 #define CNMDexp 1 //1 // needs to be 0!!! otherwise simulation does not work well
 // FBK
-#define FBKGAINDEPTH 0.6 
+#define FBKGAINDEPTH 0.62 
 #define FBKGAINLENGTH 1.2 
 //
 //#define FBKGAINDEPTH 1.0

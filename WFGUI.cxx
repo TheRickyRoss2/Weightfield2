@@ -71,12 +71,18 @@ std::map<std::string, double> GetParameters(const char* ifname)
 	//--Currents--
 	valueMap["TEMPERATURE"] = 300.;
 
-	cout<< "Processing parameters from file " << ifname <<endl;
+	// -- Doping -- 
+	valueMap["DOPING_GL"] = 0.;
+	valueMap["KIND_GL"] = 0.;
+	valueMap["SHAPE_GL"] = 0.;
+
+	cout<< "Loading file " << ifname <<endl;
 
 	std::ifstream ifile(ifname);
 	if (!ifile) {
 		cout<< "\n***WARNING: Could not open parameter file " << ifname <<endl;
 		cout<< "using DEFAULT values\n" <<endl;
+		
 		return valueMap;
 	}
 
@@ -105,25 +111,33 @@ std::map<std::string, double> GetParameters(const char* ifname)
 WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFrame(p,w,h), dwpot(Potentials(300,1,200,30)) {
 
     //take intial varible names from parameters file
-	const char* ifname = "parameters.dat";
+  //  const char* ifname = "parameters.dat";
+  string fname1  = "parameters.dat";
+  string ifname;
   string userFile;
-  if(app->Argc() < 2){
-    ifname = "parameters.dat";
-  }else{
-    ifname = app->Argv(1);
-  }
-	std::map<std::string, double> valueMap = GetParameters(ifname);
+  if(app->Argc() < 2)
+    {
+      fname1 = "parameters.dat";
+    }
+  else
+    {
+      fname1 = app->Argv(1);
+    }
+  string fname = "./sensors/data/";
+
+  ifname =  fname+fname1;
+  std::map<std::string, double> valueMap = GetParameters(ifname.c_str());
   this->UserValues = valueMap;
 
-	// mainframes initial settings
-	radiobuttonstatus=MIPunif;//radio button mip set as default
-	BatchOn=false;
-	fileName = "";
-	Connect("CloseWindow()", "WFGUI", this, "CloseWindow()");// connect exit-button of window to CloseWindow()
-
-	SetLayoutManager(new TGHorizontalLayout(this));
-	
-    ///**************************************************** GRAPHS ********************************************************///
+  // mainframes initial settings
+  radiobuttonstatus=MIPunif;//radio button mip set as default
+  BatchOn=false;
+  fileName = "";
+  Connect("CloseWindow()", "WFGUI", this, "CloseWindow()");// connect exit-button of window to CloseWindow()
+  
+  SetLayoutManager(new TGHorizontalLayout(this));
+  
+  ///**************************************************** GRAPHS ********************************************************///
     
 	PotentialTab = new TGTab(this,600,220);//General Tab
 
@@ -525,13 +539,14 @@ WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFr
     //////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
     ///START OF SETTINGS FRAME////////////////////////////////////////////////////////////////////////////////////////////////
     
-    SettingsGlobalFrame = new TGVerticalFrame(this,500,90);
-    SettingsFrame2 = new TGHorizontalFrame(SettingsGlobalFrame, 500, 90);
+    SettingsGlobalFrame = new TGVerticalFrame(this,400,90);
+    SettingsFrame2 = new TGHorizontalFrame(SettingsGlobalFrame, 400, 90);
 
     ///////////////////////////////////////////////////////////////////////////////////////////////
     //////START OF CONTROL FRAME///////////////////////////////////////////////////////////////////
    
-    ControlFrame = new TGGroupFrame(SettingsFrame2," Control",kVerticalFrame);
+    //    ControlFrame = new TGGroupFrame(SettingsFrame2,"Control",kVerticalFrame);
+    ControlFrame = new TGVerticalFrame(SettingsFrame2);
 
     ////////////////////////////////////////////
     /////////RUN FRAME/////////////
@@ -550,24 +565,6 @@ WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFr
     StopButton = new TGTextButton(ButtonPotFrame," Stop ");
     ExitButton = new TGTextButton(ButtonPotFrame," Exit ");
 
-    ///////////////////////////////////////////////////////////
-    // Saving interface
-
-    SaveFrame = new TGGroupFrame(ControlFrame,"Configuration file",kHorizontalFrame);   
-    SaveButton = new TGTextButton(SaveFrame, " Save ");
-    SaveFileName = new TGTextEntry(SaveFrame, new TGTextBuffer(5), kSunkenFrame | kDoubleBorder | kOwnBackground);
-    SaveFileName->SetText("sampleout.dat");
-    SaveFileName->SetMaxLength(4096);
-    SaveFileName->SetAlignment(kTextLeft);
-    SaveFileName->MoveResize(56, 80, 150, 22);
-    SaveFileName->SetState(kTRUE);
-    SaveButton->Associate(this);
-    SaveButton->SetTextColor(1, kFALSE);
-    SaveButton->Connect("Clicked()", "WFGUI", this, "SaveData()");
-    SaveButton->SetEnabled(kTRUE);
-
-    SaveFrame->AddFrame(SaveButton, new TGLayoutHints(kLHintsLeft | kLHintsTop,1,1,1,1));
-    SaveFrame->AddFrame(SaveFileName, new TGLayoutHints(kLHintsLeft | kLHintsTop,1,1,1,1));
 
     //develop entries
     SetButton->Associate(this);
@@ -616,8 +613,8 @@ WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFr
     SamplingLabel = new TGLabel(SamplingFrame,"Time Step [ps]:");
     StepLabel = new TGLabel(SamplingFrame,"Step x,y [micron]: ");
     SamplingEntry = new TGNumberEntry(SamplingFrame, valueMap["SAMPLING"],4,-1,TGNumberFormat::kNESReal,TGNumberFormat::kNEANonNegative,TGNumberFormat::kNELLimitMinMax,0.1,100);
-    StepxEntry = new TGNumberEntry(SamplingFrame, valueMap["STEPX"],4,-1,TGNumberFormat::kNESReal,TGNumberFormat::kNEANonNegative,TGNumberFormat::kNELLimitMinMax,0.1,2);
-    StepyEntry = new TGNumberEntry(SamplingFrame, valueMap["STEPY"],4,-1,TGNumberFormat::kNESReal,TGNumberFormat::kNEANonNegative,TGNumberFormat::kNELLimitMinMax,0.1,2);
+    StepxEntry = new TGNumberEntry(SamplingFrame, valueMap["STEPX"],4,-1,TGNumberFormat::kNESReal,TGNumberFormat::kNEANonNegative,TGNumberFormat::kNELLimitMinMax,0.01,2);
+    StepyEntry = new TGNumberEntry(SamplingFrame, valueMap["STEPY"],4,-1,TGNumberFormat::kNESReal,TGNumberFormat::kNEANonNegative,TGNumberFormat::kNELLimitMinMax,0.01,2);
     
     //develop entries
     SamplingEntry->SetState(kTRUE);
@@ -702,7 +699,6 @@ WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFr
     NameFrame->AddFrame(FileNameEntry, new TGLayoutHints(kLHintsRight| kLHintsTop | kLHintsExpandX,1,1,1,1));
 	
     //add frames
-    ControlFrame->AddFrame(SaveFrame, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX ,1,1,1,1));
     ControlFrame->AddFrame(NameFrame, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX ,1,1,1,1));
     ////////////////////////////////////////////
 
@@ -932,10 +928,10 @@ WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFr
     // IrradiationLabel = new TGLabel(IrradiationLabelFrame,new TGString(":"));
     
 
-    DopingGLButton[0] = new TGRadioButton( DopingGLButtonGroup, new TGHotString("B"));
-    DopingGLButton[1] = new TGRadioButton( DopingGLButtonGroup, new TGHotString("B+C"));
-    DopingGLButton[0]->SetState(kButtonDown);
-    DopingGLButton[0]->SetOn(kTRUE);  
+    //    DopingGLButton[0] = new TGRadioButton( DopingGLButtonGroup, new TGHotString("B"));
+    // DopingGLButton[1] = new TGRadioButton( DopingGLButtonGroup, new TGHotString("B+C"));
+    //DopingGLButton[0]->SetState(kButtonDown);
+    // DopingGLButton[0]->SetOn(kTRUE);  
     // DopingGLButton[0]->Connect("Toggled(Bool_t)", "WFGUI", this, "CallSetDopingGL()");
     // DopingGLButton[1]->Connect("Toggled(Bool_t)", "WFGUI", this, "CallSetDopingGL()");
     // CallSetDopingGL();
@@ -1112,8 +1108,58 @@ WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFr
     
     
 	///////////////////////////////////////////////////////////////////////////////////////////////
-	//////START OF DETECTOR PROPERTIES FRAME //////////////////////////////////////////////////////
+	//////START OF Right frame //////////////////////////////////////////////////////
     RightFrame = new TGVerticalFrame(SettingsFrame2);
+
+        ///////////////////////////////////////////////////////////
+    // Saving interface
+
+    SaveFrame = new TGGroupFrame(RightFrame,"Filesin sensors/data && sensors/graph",kHorizontalFrame);   
+    SaveButton = new TGTextButton(SaveFrame, "Save");
+    LoadButton = new TGTextButton(SaveFrame, "Load");
+    
+    SaveFileName = new TGTextEntry(SaveFrame, new TGTextBuffer(5), kSunkenFrame | kDoubleBorder | kOwnBackground);
+    //    SaveFileName->SetText("sampleout.dat");
+    SaveFileName->SetText(fname1.c_str());
+    SaveFileName->SetMaxLength(2000);
+    SaveFileName->SetAlignment(kTextLeft);
+    SaveFileName->MoveResize(56, 80, 100, 22);
+    SaveFileName->SetState(kTRUE);
+    SaveButton->Associate(this);
+    SaveButton->SetTextColor(1, kFALSE);
+    SaveButton->Connect("Clicked()", "WFGUI", this, "SaveData()");
+    SaveButton->SetEnabled(kTRUE);
+    SaveButton->SetBackgroundColor(0x00ff00);    
+    
+  
+    LoadButton->Associate(this);
+    LoadButton->SetTextColor(1, kFALSE);
+    LoadButton->Connect("Clicked()", "WFGUI", this, "LoadData()");
+    //    LoadButton->Connect("Clicked()", "WFGUI", this, "GetParameters()");
+    LoadButton->SetEnabled(kTRUE);
+
+    SaveFrame->AddFrame(SaveButton, new TGLayoutHints(kLHintsLeft | kLHintsTop,1,1,1,1));
+    SaveFrame->AddFrame(LoadButton, new TGLayoutHints(kLHintsLeft | kLHintsTop,1,1,1,1));
+    SaveFrame->AddFrame(SaveFileName, new TGLayoutHints(kLHintsLeft | kLHintsTop,1,1,1,1));
+
+    SaveButton1 = new TGTextButton(SaveFrame, "Save");
+    SaveFileName1 = new TGTextEntry(SaveFrame, new TGTextBuffer(5), kSunkenFrame | kDoubleBorder | kOwnBackground);
+    //    SaveFileName->SetText("sampleout.dat");
+    SaveFileName1->SetText("graph");
+    SaveFileName1->SetMaxLength(2000);
+    SaveFileName1->SetAlignment(kTextLeft);
+    SaveFileName1->MoveResize(56, 80, 100, 22);
+    SaveFileName1->SetState(kTRUE);
+    SaveButton1->Associate(this);
+    SaveButton1->SetTextColor(1, kFALSE);
+    SaveButton1->Connect("Clicked()", "WFGUI", this, "SaveGraph()");
+    SaveButton1->SetEnabled(kTRUE);
+
+    SaveFrame->AddFrame(SaveButton1, new TGLayoutHints(kLHintsLeft | kLHintsTop,1,1,1,1));
+    SaveFrame->AddFrame(SaveFileName1, new TGLayoutHints(kLHintsLeft | kLHintsTop,1,1,1,1));
+
+
+    
     DetectorPropertiesFrame = new TGGroupFrame(RightFrame,"Detector Properties",kVerticalFrame);
 	
     ////////////////////////////////////////////
@@ -1252,7 +1298,7 @@ WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFr
 	GainShape = new TGComboBox(GainShapeFrame);
 	GainShape->AddEntry(new TGString(" - "), 0);
 	GainShape->AddEntry(new TGString("Shallow doping: linear from the electrode"), 1);
-	GainShape->AddEntry(new TGString("Deep doping: a square starting 0.6 micron deep)"), 2);
+	GainShape->AddEntry(new TGString("Deep doping: a square @ 0.6 micron"), 2);
 	GainShape->AddEntry(new TGString("Epi: 3 micron deep"), 3);
 	
 	Dopingentry = new TGNumberEntry(GainSetFrame, valueMap["DOP_LEV"],4,-1,TGNumberFormat::kNESReal,TGNumberFormat::kNEANonNegative,TGNumberFormat::kNELLimitMinMax,0.,500.);
@@ -1341,7 +1387,7 @@ WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFr
     VoltageFrame->AddFrame(VolSetFrame,new TGLayoutHints(kLHintsRight,0,0,0,0));
     DetectorPropertiesFrame->AddFrame(VoltageFrame ,new TGLayoutHints(kLHintsCenterY| kLHintsExpandX ,1,1,1,1));
     ////////////////////////////////////////////
-    
+    RightFrame->AddFrame(SaveFrame, new TGLayoutHints(kLHintsCenterY | kLHintsExpandX ,1,1,1,1));
     RightFrame->AddFrame(DetectorPropertiesFrame, new TGLayoutHints(kLHintsLeft | kLHintsTop | kLHintsExpandX, 1,1,1,1));	
     
     //////END OF DETECTOR PROPERTIES FRAME/////////////////////////////////////////////////////////
@@ -1409,7 +1455,7 @@ WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFr
     OscBWEntry = new TGNumberEntry(OscilloscopeRightFrame, valueMap["OSCOPE_BW"],3,-1,TGNumberFormat::kNESReal,TGNumberFormat::kNEANonNegative);
     ImpLabel = new TGLabel(OscilloscopeLeftFrame,new TGString("CSA:Imp[Ohm],Tr.Imp[mV/fC]:"));
     //    ImpEntry = new TGNumberEntry(OscilloscopeRightFrame, valueMap["IMPEDANCE"],3,-1,TGNumberFormat::kNESReal,TGNumberFormat::kNEANonNegative);
-    TRiseLabel = new TGLabel(OscilloscopeLeftFrame, new TGString("CSA (Cdet = 0 fC) :T_r,T_f (10-90%) [ns]:"));
+    TRiseLabel = new TGLabel(OscilloscopeLeftFrame, new TGString("CSA(Cdet=0)T_r,f(10-90%)[ns]:"));
     TFallEntry = new TGNumberEntry(TRiseSetFrame, valueMap["SHPR_DCY_TIME"],3,-1,TGNumberFormat::kNESReal,TGNumberFormat::kNEANonNegative,TGNumberFormat::kNELLimitMinMax,0.1,40.);
     TRiseEntry = new TGNumberEntry(TRiseSetFrame, valueMap["SHPR_INT_TIME"],3,-1,TGNumberFormat::kNESReal,TGNumberFormat::kNEANonNegative,TGNumberFormat::kNELLimitMinMax,0.1,60.);
     //    ShTransLabel = new TGLabel(OscilloscopeLeftFrame,new TGString("CSA Trans Imp.[mV/fQ]:"));
@@ -1651,12 +1697,27 @@ WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFr
     Galpha = 330000;
     Gbeta = 1200000;
     BField = 0;
-    SetGainKind(2);
-    SetGainDoping(0);
-    SetGainShape(0);
+
+    SetGainDoping(valueMap["DOPING_GL"]); //call callsetdopingGL
+    SetGainShape(valueMap["SHAPE_GL"]);  //call setgaindoping and setgainkind
+    SetGainKind(valueMap["KIND_GL"]); //call noone
+
+    GainKind->Select(valueMap["KIND_GL"]); 
+    GainDoping->Select(valueMap["DOPING_GL"]);
+    GainShape->Select(valueMap["SHAPE_GL"]);
+    Dopingentry->SetNumber(valueMap["DOP_LEV"]);
+    Biasentry->SetNumber(valueMap["BIAS_VOLTAGE"]);
+    Depletionentry->SetNumber(valueMap["DEPL_VOLTAGE"]);
+    YMAXentry->SetNumber(valueMap["DETECT_HEIGHT"]);
+    XMAXentry->SetNumber(valueMap["STRIP_NUMB"]); 
+    Pitchentry->SetNumber(valueMap["STR_PITCH"]); 
+    Widthentry->SetNumber(valueMap["STR_WIDTH"]);
+    TempEntry->SetNumber(valueMap["TEMPERATURE"]); 
+    
+    
     //changes to window
     MapSubwindows();
-    SetWindowName("Weightfield2  Build 4.5");
+    SetWindowName("Weightfield2  Build 4.6");
     Resize(GetDefaultSize());
     MapWindow();
     CallSetPart(1);
@@ -2341,13 +2402,15 @@ void WFGUI::DrawFieldsAbs(int LCol = 1) {
 	double Maxwabs = 0;
 	double LocalGain = 0;
 	double LocalGain_h = 0;
+	double WGain = 0;
 	int wherecutbin = wherecut/dwpot.GetBinSizex();
 	
 	//	cout << "Wherecut = " << wherecut << " wherecutbin = "  << wherecutbin << endl; 
 	Npos = 0;
-	for(int k=0;k< NBins;k++) 
+	//	cout << "Binsize y = " << dwpot.GetBinSizey() << " NBins: " << NBins <<  "Nbins2: " << GetYMax()/dwpot.GetBinSizey() << endl;
+	for(int k=0;k< NBins-1;k++) 
 	  {
-
+	    Npos = k;
 	    // breakdown field
 	    //	    if (k==0)     bdfield[k]= 1e-3*4e5/(1.-1./3.*log10( (fabs(dwpot.Getdopyx(1,wherecutbin))*(EPSILON*EPSILONR)/ECHARGE*1e-6)/1e16));//breakdown voltage kV/cm
 	    // else bdfield[k] = 1e-3*4e5/(1.-1./3.*log10( (fabs(dwpot.Getdopyx(Npos,wherecutbin))*(EPSILON*EPSILONR)/ECHARGE*1e-6)/1e16));//breakdown voltage kV/cm
@@ -2364,17 +2427,29 @@ void WFGUI::DrawFieldsAbs(int LCol = 1) {
 
 	    LocalGain = 1.;
 	    LocalGain_h = 1.;
-	    
+	    /*	    
 	    if(k>0 && q1[k] < GetYMax() - ELECTRODE_DEPTH -0.2  ) // the value 0.2 is due to the fact that the last part of gain is normally jumped away
 	      {
-		for (int ll = 0; ll<VSteps[k]; ll++)
-		  {
-		    LocalGain   *=  exp(GetGainvalue(df[Npos+ll][wherecutbin].Getabs(), -1)*dwpot.GetBinSizey()*1e-6);
-		    LocalGain_h *=  exp(GetGainvalue(df[Npos+ll][wherecutbin].Getabs(), 1)*dwpot.GetBinSizey()*1e-6);
-		  }
+		//for (int ll = 0; ll<10; ll++)
+		//  {
+		    //cout << "Npos " << Npos << endl;
+		//   LocalGain   *=  exp(GetGainvalue(df[Npos+ll][wherecutbin].Getabs(), -1)*dwpot.GetBinSizey()*1e-6);
+		    // LocalGain_h *=  exp(GetGainvalue(df[Npos+ll][wherecutbin].Getabs(), 1)*dwpot.GetBinSizey()*1e-6);
+		    //		  }
 		//		LocalGain =  exp(GetGainvalue((dabs[k]+dabs[k-1])/(2)*1e5, -1)*dwpot.GetBinSizey()*VSteps[k]*1e-6);
 		// LocalGain_h = exp(GetGainvalue((dabs[k]+dabs[k-1])/(2)*1e5, 1)*dwpot.GetBinSizey()*VSteps[k]*1e-6);
-	      } 
+		WGain = (GetGainvalue(df[Npos][wherecutbin].Getabs(), -1)+GetGainvalue(df[Npos+1][wherecutbin].Getabs(), -1))/2.;
+		LocalGain   =  exp(WGain*dwpot.GetBinSizey()*1e-6);
+		WGain = (GetGainvalue(df[Npos][wherecutbin].Getabs(), 1)+GetGainvalue(df[Npos+1][wherecutbin].Getabs(), 1))/2.;
+		LocalGain_h =  exp(WGain*dwpot.GetBinSizey()*1e-6);
+	      }
+*/
+	    WGain = (GetGainvalue(df[Npos][wherecutbin].Getabs(), -1)+GetGainvalue(df[Npos+1][wherecutbin].Getabs(), -1))/2.;
+	    LocalGain   =  exp(WGain*dwpot.GetBinSizey()*1e-6);
+	    WGain = (GetGainvalue(df[Npos][wherecutbin].Getabs(), 1)+GetGainvalue(df[Npos+1][wherecutbin].Getabs(), 1))/2.;
+	    LocalGain_h =  exp(WGain*dwpot.GetBinSizey()*1e-6);
+
+	    
 
 	    if (LocalGain> 100)
 	      {
@@ -2397,7 +2472,7 @@ void WFGUI::DrawFieldsAbs(int LCol = 1) {
 	      {
 		gain[k] = (LocalGain)*gain[k-1];
 		gain_h[k] = (LocalGain_h)*gain_h[k-1];
-		//	cout << "Npos = " << Npos << " pos = " <<q1[k] << " Localgain = " << LocalGain << " " << gain[k] << endl;
+		//     	cout << "Npos = " << Npos << setprecision(3)<< " pos = " <<Npos*dwpot.GetBinSizey()*1e-6 << " Localgain = " << LocalGain << " " << gain[k] << endl;
 	      }
 	    if( gain[k] >1.01 && Getygainlow() == 0)
 	      {
@@ -2420,7 +2495,7 @@ void WFGUI::DrawFieldsAbs(int LCol = 1) {
 	    if (Maxgain < gain[k]) Maxgain = gain[k];
 	    if (dabs[k]<Mindabs) Mindabs = dabs[k];
 
-	    Npos +=VSteps[k];
+	    //	    Npos +=VSteps[k];
 	    
 	    //  cout << k << endl;
 	  }
@@ -2917,13 +2992,13 @@ int WFGUI::CallBoundaryConditions() {
   SetVDepl(Depletionentry->GetNumber());
   SetGainon(false);
   SetYGain(Gainentry->GetNumber());
-  if (Dopingentry->GetNumber() > 0.1)
-    {
+  //  if (Dopingentry->GetNumber() > 0.1)
+  // {
 
-      SetStepy(0.1);
+  SetStepy(0.1);
       //     cout << "Sensor with gain layer, y-step set to 0.1 micron" << endl;
-      StepyEntry->SetNumber(0.1);
-    }
+  //  StepyEntry->SetNumber(0.1);
+  // }
   /*SetGainon(true);
   SetYGain(1.);
   if (Gainentry->GetNumber() > 1. && CallGetDetType() ==0 )
@@ -2967,11 +3042,11 @@ int WFGUI::CallBoundaryConditions() {
   TempEntry->GetNumber();
   SetSWidth(Widthentry->GetNumber());
   if(PotentialThread==0)
-    {	
+    {
+      //      cout << " In WFGUI Boundary  stepy " << GetStepy() << endl;
       //	  cout << " CallA" << endl;
       dwpot.SetPitchWidthXY(GetYMax(),GetNStrips(),Pitchentry->GetNumber(),Widthentry->GetNumber(), GetStepx(), GetStepy() );      // set pitch, width, XMAX and YMAX
       // added 0.01 to add stability on pitch determination
-      //		dwpot.SetV(Biasentry->GetNumber(),Depletionentry->GetNumber());  		// set depletion and bias voltage
       dwpot.SetV(GetVBias(),GetVDepl());  				// set depeletion and bias voltage
       dwpot.SetDoping(stripdoping,bulkdoping);
       
@@ -3068,9 +3143,9 @@ void WFGUI::CallSetDopingGL(Int_t id) {
 
   // c_coefficient:
   float B = 5.5;
-  float BC = 2.1;
+  float BC = 2.7; // it was 2.1;
   float Ga = 8.5;
-  float GAC = 2.7;
+  float GAC = 3.3; // it was 2.7
   float BLD = 4.1;
 
   DopingGLType = B;
@@ -3218,6 +3293,7 @@ void WFGUI::SetGainShape(Int_t id)
       }
   SetGainKind(GetGainKind());
   SetGainDoping(GetGainDoping());
+  
   return;
 }
 
@@ -3283,12 +3359,18 @@ void WFGUI::SetGainDoping(Int_t id) {
       GainShape->Select(0);
       GainShape->SetEnabled(kFALSE);
       GainDoping->Select(0);
+      SamplingEntry->SetNumber(0.3);
+      SamplingEntry->SetState(kTRUE);
     }
   if (id > 0 && NGainDoping ==0)
     {
       CalculateButton->SetEnabled(kFALSE);
       GainShape->SetEnabled(kTRUE);
       GainShape->Select(2);
+      SamplingEntry->SetNumber(0.1);
+      SamplingEntry->SetState(kFALSE);
+      SetStepy(0.06);
+      StepyEntry->SetNumber(0.06);      
     }
   CalculateButton->SetEnabled(kFALSE);
   NGainDoping = id;
@@ -4772,8 +4854,31 @@ void WFGUI::CloseWindow() // Got close message for this MainFrame. Terminates th
   gApplication->Terminate();
 }
 /////////////////////////////////////////////////////////////////////////////////////////////
+void WFGUI::LoadData(){
+
+  string fname = "./sensors/data/";
+  fname+=SaveFileName->GetText();
+  //  std::cout << "Loading data from file " << fname.c_str() << std::endl;
+  std::map<std::string, double> valueMap = GetParameters(fname.c_str());
+
+  // partial loading for now
+
+  SetGainDoping(valueMap["DOPING_GL"]); //call callsetdopingGL
+  SetGainShape(valueMap["SHAPE_GL"]);  //call setgaindoping and setgainkind
+  SetGainKind(valueMap["KIND_GL"]); //call noone
+  
+  GainKind->Select(valueMap["KIND_GL"]); 
+  GainDoping->Select(valueMap["DOPING_GL"]);
+  GainShape->Select(valueMap["SHAPE_GL"]);
+  Dopingentry->SetNumber(valueMap["DOP_LEV"]);
+  
+  
+}
+  
+/////////////////////////////////////////////////////////////////////////////////////////////
 void WFGUI::SaveData(){
   std::cout << "Saving data" << std::endl;
+
 
   UserValues["BBBW"] = BBBWEntry->GetNumber();
   UserValues["BBGAIN"] = BBGainEntry->GetNumber();
@@ -4813,19 +4918,67 @@ void WFGUI::SaveData(){
   UserValues["TEMPERATURE"] = TempEntry->GetNumber(); 
   UserValues["USERQ"] = 73; 
   UserValues["VTH"] = CSAVthEntry->GetNumber(); 
-  UserValues["YPOSITION"] = EdgeNumberentry->GetNumber(); 
+  UserValues["YPOSITION"] = EdgeNumberentry->GetNumber();
+
+  UserValues["KIND_GL"] =GetGainKind();
+  UserValues["DOPING_GL"] =NGainDoping;
+  UserValues["SHAPE_GL"] =GetGainShape();
+
+  
 
 
   std::ofstream myfile;
-  string fname = "./";
+  string fname = "./sensors/data/";
   fname+=SaveFileName->GetText();
+
+  ifstream ifile(fname);
+  if (ifile) {
+    if (Eflag == 0)
+      {
+	cout << "The file exists, and is open for input" << endl;
+	SaveButton->SetBackgroundColor(0xff0000);
+	SaveButton->SetTitle("sure?");
+	
+	Eflag = 1;
+	return;
+      }
+    else if (Eflag == 1)
+      {
+	Eflag = 0;
+	SaveButton->SetBackgroundColor(0x00ff00);
+	SaveButton->SetTitle("Save");
+      }
+  }
   myfile.open(fname, ios::out);
+  
   for (auto it = UserValues.begin(); it!=UserValues.end(); it++){
     myfile << it->first << "  " << it->second <<  "\n";
     myfile.flush();
   }
+  
   myfile.flush();
   myfile.close();
+}
+/////////////////////////////////////////////////////////////////////////////////////////////
+void WFGUI::SaveGraph(){
+  std::cout << "Saving graph" << std::endl;
+
+  std::ofstream myfile;
+  string fname = "./sensors/graph/";
+  fname+=SaveFileName1->GetText();
+  fname +=".root";
+  
+  // Added saving of canvases
+  TFile *outputFile = new TFile(fname.c_str(), "RECREATE");
+  Getcanvasp()->Write("potentials");
+  Getcanvaspc()->cd(1);
+  Getcanvaspc()->Write("eh_pairs");
+  Getcanvaspc()->cd(2);
+  Getcanvaspc()->Write("potential_currents");
+  Getcanvasw()->Write("weighting");
+  outputFile->Write();
+  outputFile->Close();
+  
 }
 /////////////////////////////////////////////////////////////////////////////////////////////
 TThread* WFGUI::GetPotentialThread() {
@@ -4850,47 +5003,39 @@ void* WFGUI::StartPotentialCalcTh(void* arg)
   //  cout << __LINE__<< endl;	
 
   //	sleep(1);
-  if (gui->GetGainon()==true  && fabs(gui->GetStepy()-0.1)>0.06 )
+  if (gui->GetGainon()==true  && (gui->GetStepy()-0.1)>0. )
     {
       cout << "Calculation done with step in y = " << gui->GetStepy() << endl;
-      gui->SetStepy(0.1);
-      gui->StepyEntry->SetNumber(0.1);
-      cout << "Sensor with gain layer, y-step has to be 0.1 micron" << endl;
+      gui->SetStepy(0.08);
+      gui->StepyEntry->SetNumber(0.08);
+      cout << "Sensor with gain layer, y-step has to be < 0.1 micron" << endl;
       cout << "Calculate the potential again" << endl;
       gui->CalculateButton->SetEnabled(kFALSE);
       gui->CalcPotButton->SetEnabled(kTRUE);
       gui->SetButton->SetEnabled(kTRUE);
+      gui->CalculatingLabel->SetBackgroundColor(0xff0000);	// when calculation completed, set progress label color to green
+      gui->CalculatingLabel->SetTitle("Calculate the potential again");
       
     }
   
-  else gui->SetAllButton(1);
-  //	if (GetGainon()=false )
-  //else
-  // {
-  //   cout <<  StepYButton[1]->GetState() << "Buttom Stepy 1 "  << endl;
-  // }
-  //gui->DrawFieldsAbs();
-  
-  gui->CalculatingLabel->SetBackgroundColor(0x00ff00);	// when calculation completed, set progress label color to green
-  gui->CalculatingLabel->SetTitle("Done");
+  else
+    {
+      gui->SetAllButton(1);
+      gui->CalculatingLabel->SetBackgroundColor(0x00ff00);	// when calculation completed, set progress label color to green
+      gui->CalculatingLabel->SetTitle("Done");
 
-  // Added saving of canvases
-  TFile *outputFile = new TFile("potentials.root", "RECREATE");
-  gui->Getcanvasp()->Write("potentials");
-  gui->Getcanvaspc()->cd(1);
-  gui->Getcanvaspc()->Write("eh_pairs");
-  gui->Getcanvaspc()->cd(2);
-  gui->Getcanvaspc()->Write("potential_currents");
-  gui->Getcanvasw()->Write("weighting");
-  outputFile->Write();
-  outputFile->Close();
-
+    }
   
   return NULL;	
 }
 /////////////////////////////////////////////////////////////////////////////////////////////
 Int_t WFGUI::ThreadstartPotential(){
 
+  if( GetGainDoping()>0)
+    {
+      SetStepy(0.06);
+      StepyEntry->SetNumber(0.06);
+    }
   //	CallBoundaryConditions();
   //  	cout << __LINE__<< endl;
 	WFGUI* arg = this;
@@ -5387,7 +5532,7 @@ void WFGUI::SetStepy( double val)
 }
 //////////////////////////////////////////////////////////////////////////////////////
 double WFGUI::GetStepy() {
-	return Stepy+0.01;
+  return Stepy+0.01;
 }
 /////////////////////////////////////////////////////////////////////////////////////////////
 
