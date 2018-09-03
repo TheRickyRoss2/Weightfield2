@@ -68,6 +68,7 @@ class WFGUI : public TGMainFrame {
 		bool gainon;
 		bool OscOn;
 		bool NA62On;
+		bool SC_CSAOn;
 		bool FileNameOn;
 		bool BatchOn;
 		bool BatchRandomOn;
@@ -237,7 +238,7 @@ class WFGUI : public TGMainFrame {
         TGHorizontalFrame *ParticlesSpecificsLabelFrame;
         TGVerticalFrame *ParticlesSpecificsSetFrame;
         TGComboBox *ParticleKind;
-	TGComboBox *SCAKind;
+	TGComboBox *CSAKind;
 
 
         TGVerticalFrame *GainKindFrame;
@@ -265,6 +266,7 @@ class WFGUI : public TGMainFrame {
 		//TGGroupFrame *ParticlesPropertiesFrame1;//not used
 		TGGroupFrame *ChargeCollectionFrame;
 		TGGroupFrame *LorentzInfoFrame;
+		TGGroupFrame *LTInfoFrame;
 		TGGroupFrame *DimensionsFrame;
 		TGGroupFrame *VoltageFrame;
 		TGGroupFrame *CurrentsFrame;
@@ -487,6 +489,10 @@ class WFGUI : public TGMainFrame {
 		TGLabel *LorentzeTextLabel;
 		TGLabel *LorentzeLabel;
 		TGLabel *LorentzhLabel;
+		TGLabel *LThTextLabel;
+		TGLabel *LTeTextLabel;
+		TGLabel *LTeLabel;
+		TGLabel *LThLabel;
 		TGLabel *CalculatingLabel;
 		TGLabel *CalculatingLabel2;
 		TGLabel *DriftCutLabel;
@@ -635,13 +641,14 @@ class WFGUI : public TGMainFrame {
 		int CallGetDopingStrip();
 		int CallGetDJType();
 		int GetParticleType();
+		int GetMPV();
 		void SetParticleType(int);
 		void CallSetDJType();
 		void CallCalculatePotentials();			// Method to Calculate Potentials
 		void CallSetDopingBulk();					// Method to set bulk n-type, strips p-type
 		void CallSetParticleIrr();					// Method to set irradiaiotn particle
 		void CallSetDopingGL(Int_t);					// Method to set irradiaiotn particle
-		void CallSetSCA(int);					// Method to set irradiaiotn particle
+		void CallSetCSA(int);					// Method to set irradiaiotn particle
 		void CallSetReadOut();					// Method to set bulk p-type, strips n-type
 		void CallSetDopingStrip();// readout
 		void SetGainKind(Int_t);
@@ -741,6 +748,7 @@ class WFGUI : public TGMainFrame {
 		
 		void SetQLabel(const char*,const char*,const char*,const char*,const char*,const char*,const char*,const char*,const char*);
 		void SetAngleLabel(const char*, const char*);
+		void SetLTLabel(const char*, const char*);
 		void SetGainon(bool);		//sets gain layer active
 		bool GetGainon();			//returns if gain layer is active
 		void SetYGain(double);	
@@ -845,86 +853,89 @@ class WFGUI : public TGMainFrame {
 	
 
 
-		void SetBBVth(double);
-		double GetBBVth();
-		void SetBBNoise(double);
-		double GetBBNoise();
-
-
-		void SetBBBW(double);
-		double GetBBBW();
-		void SetBBGain(double);
-		double GetBBGain();
-
-
-
-		double GetCSAVth();
-		void SetCSAVth(double);
+	void SetBBVth(double);
+	double GetBBVth();
+	void SetBBNoise(double);
+	double GetBBNoise();
+	
+	
+	void SetBBBW(double);
+	double GetBBBW();
+	void SetBBGain(double);
+	double GetBBGain();
+	
+	
+	
+	double GetCSAVth();
+	void SetCSAVth(double);
+	
+	void SetCSAFTVth(double);
+	double GetCSAFTVth();
+	void SetCSATVth(double);
+	double GetCSATVth();
+	
+	void SetJitter(double);
+	double GetJitter();
+	void SetFJitter(double);
+	double GetFJitter();
+	
+	
 		
-		void SetCSAFTVth(double);
-		double GetCSAFTVth();
-		void SetCSATVth(double);
-		double GetCSATVth();
-		
-		void SetJitter(double);
-		double GetJitter();
-		void SetFJitter(double);
-		double GetFJitter();
-
-		
-		
-		void SetBBJitter(double);
-		double GetBBJitter();
-		void SetBBFTVth(double);
-		double GetBBFTVth();
-		void SetBBTVth(double);
-		double GetBBTVth();
-
-		void SetSWidth(double);
-		double GetSWidth();
-		void SetOscOn(bool);
-		bool GetOscOn();
-
-		void SetNA62On(bool);
-		bool GetNA62On();
-		
-		void SetFileNameOn(bool);
-		bool GetFileNameOn();
-
-		void SetBatchOn(bool);
-		void SetBatchRandomOn(bool);
-		void SetForceGain(bool);
-		bool GetBatchOn();
-		bool GetBatchRandomOn();
-		bool GetForceGain();
-		void SetCCEOn(bool);
-		bool GetCCEOn();
-
-		void SetInitialDopRemoval(bool);
-		void SetStyle();
-		void SetTGraphStyle(TGraph*, double);	
-		void SetHStyle(TH1F*, double);	
-		bool GetInitialDopRemoval();
-		void SetAcceptorCreation(bool);
-		bool GetAcceptorCreation();
-
-		void SetDJOn(bool);
-		bool GetDJOn();
-		void SetEvNumber(int);
-		int GetEvNumber();
-		void SetEvent(int);
-		int GetEvent();
-		void SetGainRecess(int);
-		int GetGainRecess();
-		float Getygainlayerlow();
-		float Getygainlayerhigh();
-		void Setygainlow(float);
-		void Setygainhigh(float);
-		float Getygainlow();
-		float Getygainhigh();
-		double GetAngle();
-
-		//void SetAngle(double);
-
-		ClassDef(WFGUI,0);  // muss auskommentiert sein wenn .x ... .cxx+
+	void SetBBJitter(double);
+	double GetBBJitter();
+	void SetBBFTVth(double);
+	double GetBBFTVth();
+	void SetBBTVth(double);
+	double GetBBTVth();
+	
+	void SetSWidth(double);
+	double GetSWidth();
+	void SetOscOn(bool);
+	bool GetOscOn();
+	
+	void SetNA62On(bool);
+	bool GetNA62On();
+	
+	void SetSC_CSAOn(bool);
+	bool GetSC_CSAOn();
+	
+	void SetFileNameOn(bool);
+	bool GetFileNameOn();
+	
+	void SetBatchOn(bool);
+	void SetBatchRandomOn(bool);
+	void SetForceGain(bool);
+	bool GetBatchOn();
+	bool GetBatchRandomOn();
+	bool GetForceGain();
+	void SetCCEOn(bool);
+	bool GetCCEOn();
+	
+	void SetInitialDopRemoval(bool);
+	void SetStyle();
+	void SetTGraphStyle(TGraph*, double);	
+	void SetHStyle(TH1F*, double);	
+	bool GetInitialDopRemoval();
+	void SetAcceptorCreation(bool);
+	bool GetAcceptorCreation();
+	
+	void SetDJOn(bool);
+	bool GetDJOn();
+	void SetEvNumber(int);
+	int GetEvNumber();
+	void SetEvent(int);
+	int GetEvent();
+	void SetGainRecess(int);
+	int GetGainRecess();
+	float Getygainlayerlow();
+	float Getygainlayerhigh();
+	void Setygainlow(float);
+	void Setygainhigh(float);
+	float Getygainlow();
+	float Getygainhigh();
+	double GetAngle();
+	
+	//void SetAngle(double);
+	
+	ClassDef(WFGUI,0);  // muss auskommentiert sein wenn .x ... .cxx+
 };

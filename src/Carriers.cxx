@@ -406,7 +406,7 @@ void CreateCharges(Potentials &pot, Carriers *carriers, int hit, void* wfgui)   
 	      if (mm == ll-1) ypos = 0.001+ mm*DistHisto*cos(angle)+((i-SumSteps)/double(PairsPer5Micron[mm]))*double(DistHisto*cos(angle)*LastBinRescale);
 	      if (ypos>=pot.GetYMAX()*pot.GetBinSizey()-ELECTRODE_DEPTH || ypos < ELECTRODE_DEPTH) continue; //remove particles at the very edges
 
-	      Elypos =  ypos;
+	      Elypos =  ypos-2.5;
 
 	      // super-electrons 
 	      //   cout << "electron " << i << " at y = " << ypos << endl;	      
@@ -439,6 +439,9 @@ void CreateCharges(Potentials &pot, Carriers *carriers, int hit, void* wfgui)   
 	  
 	  double eradius= 2*PairsPer5Micron[mm]*0.003*chargescale/(0.5*gui->GetNumberP());
 	  //	  cout << Elypos << endl;
+
+	  //	  cout << "Elypos = " << Elypos << endl;
+
 	  
 	  if (!gui->GetLess2DPlot()) 
 	    gui->GetEllipse()->DrawEllipse(xangle,Elypos,eradius,eradius,0.,360.,0.);
@@ -1062,8 +1065,8 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 	int IMax = 0; //Max index of currents
 	int IMaxSh = 0; //Max index of currents
 	// int NIsysMax = 0;
-	int NDer0_sh=0;
-	int NDer0_BB=0;
+	int NCSA_der0=0;
+	int NBB_der0=0;
 	double TimeMax = 0; //Max time of window
 	double taurise_CSA_RC=0;
 	double taufall_CSA_RC=0;
@@ -1207,7 +1210,7 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 	    cout << "Maximum time limit simulated " << TMAX*TIMEUNIT*1e9 << " nanoseconds "<<endl;
 	}
 	
-	double dist = 0;
+	//	double dist = 0;
 	//double InitX = 0;
 	//double InitY = 0;
 	double itot_max= 0;
@@ -1346,8 +1349,8 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 		
 		//	    cout << "Predicted System Tau (C_det * R=50 Ohm)= " << tau_CSA_RC*1e9tau_CSA_RC*1e9 << " ns" << endl;
 		cout << "Oscilloscope  BW = " << gui->GetOscBW() << " GHz" << endl;
-		cout << "CSA Int. Time (10-90 %)= " <<  TRise*1e9 << " ns" << endl;
-		cout << "CSA Fall Time = " << TFall*1e9 << " ns" << endl;
+		//		cout << "CSA Int. Time (10-90 %)= " <<  TRise*1e9 << " ns" << endl;
+		//	cout << "CSA Fall Time = " << TFall*1e9 << " ns" << endl;
 		cout << "Noise (Assuming square pixel) = " << Noise << " ENC" << endl;
 		//	    cout << "Shaper Threshold set at VTh = " << VTh << " fC" << endl;
 		//	    cout << "CSA Threshold set at VTh = " << CSAVth << " mV" << endl;
@@ -1355,47 +1358,127 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 	      }
 	  }
 	
-	//	int IintTimeSh= 0;
-	// int IintTimeSCA= 0;
-	//int first_loop_over = 2;
-	//	    bool CrossedGain = false;
-	//	  double GainConst = 0;
-	//if (i==0)
-	// {
-	//   first_loop_over = 0;
-	// }
+
 	double timeunit = TIMEUNIT;
 	double beta_electrons = 0.0; //proportionality constant for electrons (in untis of 10^-13 cm^2/ns, later will be corrected from ns to the loop time via the use of timeunit)
 	double beta_holes = 0.0; //proportionality constant for holes (in untis of 10^-13 cm^2/ns, later will be corrected from ns to the loop time via the use of timeunit)
 	double trapping_probability_electrons = 0.0;
 	double trapping_probability_holes = 0.0;
-	double effective_trapping_time_e = 0.0; // in in units given by timeunit
-	double effective_trapping_time_h = 0.0; // iin in units given by timeunit
+	double tau_e = 0.0; // in in units given by timeunit
+        double tau_h = 0.0; // iin in units given by timeunit
+	double tau_tote = 0.0; // in in units given by timeunit
+        double tau_toth = 0.0;
+	double tau_inve = 0.0; // in in units given by timeunit
+	double tau_invh = 0.0;
+	
 	// double t2 = 0.0; //time constant used in voltage dependent trapping probability
 	double Ke = -0.86;
 	double Kh = -1.52;
 	double temperature = gui->GetT();// in K
 	double T0 = 263.15; //in K
+	//double exp_fluence = 0.80; // exponent for protons beta_e = 4.9, beta_h = 6.2
+
+	// double exp_fluence = 1.; // exponent for protons beta_e = 4.7, beta_h = 5.9
 	
 	
-	
+
 	//
-	double fluence = gui->GetFluence()*1e-13;// fluence from gui in units of 10 ^13 neq/cm^2 (equivalent 1Mev neutron following NIEL)	
-	  if (fluence<0.1 ) {	
+
+	double fluence = gui->GetFluence()*1E-14;
+
+	// fluence from gui in units of 10 ^14 neq/cm^2 (equivalent 1Mev neutron following NIEL)
+	//	beta_electrons = (b_e*pow(10.0, -16.0)*(timeunit/pow(10,-9)))*pow((temperature/T0), Ke); //(neutron)	10−16 cm2/ns
+	//beta_holes = (b_h*pow(10.0, -16.0)*(timeunit/pow(10,-9)))*pow((temperature/T0), Kh); //(neutron)
+
+	beta_electrons = b_e*pow(10.0, -2.0)*pow((temperature/T0), Ke); //(neutron)	10−16 cm2/ns
+	beta_holes = b_h*pow(10.0, -2.0)*pow((temperature/T0), Kh); //(neutron)
+
+	//	double phie_const =  1./((timeunit/pow(10,-9))*beta_electrons * pow(30 ,exp_fluence)) + 1./( (timeunit/pow(10,-9))*beta_electrons * pow(fluence,exp_fluence));
+	//	double phih_const =  1./((timeunit/pow(10,-9))* beta_holes * pow(30,exp_fluence)) + 1./((timeunit/pow(10,-9))* beta_holes * pow(fluence,exp_fluence));
+
+	double tau_e_const = 0.6;
+	double tau_h_const = tau_e_const*(beta_electrons/beta_holes);
+	
+	tau_h = 1./(beta_holes*fluence);
+	tau_e = 1./(beta_electrons*fluence);
+
+	tau_inve = 1/tau_e_const + 1/tau_e;
+	tau_invh = 1/tau_h_const + 1/tau_h;
+
+	tau_tote = sqrt( pow(tau_e_const,2) + pow(tau_e,2)) ;
+	tau_toth = sqrt( pow(tau_h_const,2) + pow(tau_h,2));
+	
+	//	trapping_probability_electrons =  1./phie_const ;
+	//trapping_probability_holes = 1./phih_const;
+
+	trapping_probability_electrons =  (timeunit/pow(10,-9))/tau_tote  ;
+	trapping_probability_holes = (timeunit/pow(10,-9))/tau_toth;
+	// 1/[ns]
+	//	trapping_probability_electrons =  (timeunit/pow(10,-9))*beta_electrons * pow(fluence,exp_fluence)  ; //
+	//trapping_probability_holes =(timeunit/pow(10,-9))* beta_holes * pow(fluence,exp_fluence); // 1/[ns]
+
+
+	cout << tau_e  << " " <<  	tau_h <<  " tau "  << endl;
+	/*
+	if (exp_fluence ==1)
+	  {
+	    trapping_probability_electrons = beta_electrons * pow(fluence,exp_fluence) ;
+	    trapping_probability_holes = beta_holes * pow(fluence,exp_fluence);
+	    if (trapping_probability_electrons > 0) cout << "Electron  linear lifetime tau is " << (timeunit/pow(10,-9))/trapping_probability_electrons << " [ns]" << endl; //for electrons
+	  }
+	else if (exp_fluence ==-1)
+	  {
+	    trapping_probability_electrons =  0.001*beta_electrons *pow(10.0,16.0) * log(fluence) ;
+	    trapping_probability_holes = 0.001*beta_holes *pow(10.0, 16.0)  *  log(fluence);
+	    if (trapping_probability_electrons > 0) cout << "Electron  ln lifetime tau is " << (timeunit/pow(10,-9))/trapping_probability_electrons << " [ns]" << endl; //for electrons
+	  }
+
+	*/	
+	char * estring;	// char array for output of lorentz angle of electrons in degree in gui
+	estring = new char[20];
+	if (trapping_probability_electrons > 0) sprintf(estring, "%.2lf", (timeunit/pow(10,-9))/trapping_probability_electrons );
+	
+	char * hstring;	// char array for output of lorentz angle of holes in degree in gui
+	hstring = new char[20];
+	if (trapping_probability_holes > 0)  sprintf(hstring, "%.2lf", (timeunit/pow(10,-9))/trapping_probability_holes);
+	
+	//gui->SetQLabel(qestring,qhstring,qehstring,qegstring,qhgstring,qehgstring);	// Update Labels in gui
+	gui->SetLTLabel(estring,hstring);
+
+	
+	/*	
+	if (fluence<0.1 ) {	
 	    beta_electrons = (b_e*pow(10.0, -3.0)*(timeunit/pow(10,-9)))*pow((temperature/T0), Ke); //(neutron)
 	    beta_holes = (b_h*pow(10.0, -3.0)*(timeunit/pow(10,-9)))*pow((temperature/T0), Kh); //(neutron)
 	    //beta_electrons = 5.6*pow(10.0, -3.0); //(hadron)
 	    //beta_holes = 7.7*pow(10.0, -3.0); //(hadron)
-	    trapping_probability_electrons = beta_electrons * fluence;
-	    trapping_probability_holes = beta_holes * fluence;
+	    if (exp_fluence ==1)
+	      {
+		trapping_probability_electrons = beta_electrons * pow(fluence,exp_fluence) ;
+		trapping_probability_holes = beta_holes * pow(fluence,exp_fluence);
+	      }
+	    else if (exp_fluence ==-1)
+	      {
+		trapping_probability_electrons = beta_electrons * log(fluence) ;
+		trapping_probability_holes = beta_holes * log(fluence);
+	      }
+	    
 	  }	
 	  else if (fluence>=0.1 && fluence<=10.0 ) {//from G. Kramberger, V. Cindro, I. Mandic, M. Mikuz, M. Zavrtanik, “Effective trapping time of electrons and holes in different silicon materials irradiated with neutrons, protons and pions”, Nuclear Instruments and Methods in Physics Research A 481 (2002) 297–305, (mixed irradaìiation) (263K)
 	    beta_electrons = (b_e*pow(10.0, -3.0)*(timeunit/pow(10,-9)))*pow((temperature/T0), Ke); //(neutron)
 	    beta_holes = (b_h*pow(10.0, -3.0)*(timeunit/pow(10,-9)))*pow((temperature/T0), Kh); //(neutron)
 	  //beta_electrons = (5.6*pow(10.0, -3.0))*pow((temperature/263.15), Ke); //(charged hadron)
 	  //beta_holes = (7.7*pow(10.0, -3.0))*pow((temperature/263.15), Ke); //(charged hadron)
-	  trapping_probability_electrons = beta_electrons * fluence;
-	  trapping_probability_holes = beta_holes * fluence;
+	    if (exp_fluence ==1)
+	      {
+		trapping_probability_electrons = beta_electrons * pow(fluence,exp_fluence) ;
+		trapping_probability_holes = beta_holes * pow(fluence,exp_fluence);
+	      }
+	    else if (exp_fluence ==-1)
+	      {
+		trapping_probability_electrons = beta_electrons * log(fluence) ;
+		trapping_probability_holes = beta_holes * log(fluence);
+	      }
 	}
 	else if (fluence>10.0) 
 	  {
@@ -1403,13 +1486,23 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 	    beta_holes = (b_h*pow(10.0, -3.0)*timeunit/pow(10,-9))*pow((temperature/T0), Kh); //(neutron)
 	    //beta_electrons = (5.6*pow(10.0, -3.0))*pow((temperature/263.15), Ke); //(charged hadron)
 	    //beta_holes = (7.7*pow(10.0, -3.0))*pow((temperature/263.15), Kh); //(charged hadron)
-	    effective_trapping_time_e = 1/(beta_electrons * fluence); //+ t2*(pot.Getvbias() - pot.Getvdepl())/100;//include voltage dependance
-	    effective_trapping_time_h = 1/(beta_holes * fluence); //+ t2*(pot.Getvbias() - pot.Getvdepl())/100;//include voltage dependance
-	    trapping_probability_electrons = 1/effective_trapping_time_e;
-	    trapping_probability_holes = 1/effective_trapping_time_h;
+	    // effective_trapping_time_e = 1/(beta_electrons * pow(fluence,exp_fluence)); //+ t2*(pot.Getvbias() - pot.Getvdepl())/100;//include voltage dependance
+	    // effective_trapping_time_h = 1/(beta_holes * pow(fluence,exp_fluence)); //+ t2*(pot.Getvbias() - pot.Getvdepl())/100;//include voltage dependance
+	    //trapping_probability_electrons = 1/effective_trapping_time_e;
+	    // trapping_probability_holes = 1/effective_trapping_time_h;
+	    if (exp_fluence ==1)
+	      {
+		trapping_probability_electrons = beta_electrons * pow(fluence,exp_fluence) ;
+		trapping_probability_holes = beta_holes * pow(fluence,exp_fluence);
+	      }
+	    else if (exp_fluence ==-1)
+	      {
+		trapping_probability_electrons = beta_electrons * log(fluence) ;
+		trapping_probability_holes = beta_holes * log(fluence);
+	      }
 	  }
 
-
+*/
 	if (gui->GetCCEOn()   && gui->GetBatchOn()==false)	  
 	  {
 	    cout << "CCE effects on, Fluence = " << fluence << " [10^13 neq /cm^2]" << endl;
@@ -1835,9 +1928,6 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
             
                 
                 //IRRADIATION CAUSED TRAPPING
-		    if (gui->GetCCEOn()){
-
-		      
 		      
 		      /* 
 		      //different betas for different fleunces (and articles), but the change in the currentoutput is minimal
@@ -1855,30 +1945,34 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 		      }
 		      
 		      */
+		    if (gui->GetCCEOn()){		     
 		      double random_number = ((double) rand() / (RAND_MAX));
 		      
 		      //trapping: reasoning is that carrier number scales as exp(-tr_pr*t), so each ns the N is reduced by a fraction which is exp(-tr_pr), thus the probability of not being trapped can be considered as the remainig fraction of carriers N/No= exp(tr_pr), and so the probability of being trapped is 1-exp(-tr_pr*t)
-		      if (carriers[j].GetCharge()==-1 && random_number <= (1-exp(-trapping_probability_electrons))){//for electrons
-			//cout<<trapping_probability_electrons<< random_number << endl;
-			carriers[j].Setinside(0);//the charge is trapped if the randomly generated number is lower than the trapping probability
-			LostCarriers++;
-		      }
-		      if (carriers[j].GetCharge()==1 && random_number <= (1-exp(-trapping_probability_holes))){//for holes
-			carriers[j].Setinside(0);//the charge is trapped if the randmply generated number is lower than the trapping probability
-			LostCarriers++;
-		      }
-		      
-		      if (random_number > (1 - exp(-trapping_probability_holes)) && carriers[j].GetCharge()==1)
+		      if (carriers[j].GetCharge()==-1 )
 			{
-			  
-			  carriers[j].Setx(xnew);	  // otherwise update position
-			  carriers[j].Sety(ynew);
+			  if (random_number <= (1-exp(-trapping_probability_electrons))){//for electrons
+			    //cout<<trapping_probability_electrons<< random_number << endl;
+			    carriers[j].Setinside(0);//the charge is trapped if the randomly generated number is lower than the trapping probability
+			    LostCarriers++;
+			  }
+			  else 
+			    {			      
+			      carriers[j].Setx(xnew);	  // otherwise update position
+			      carriers[j].Sety(ynew);
+			    }
 			}
-		      if (random_number > (1- exp(-trapping_probability_electrons)) && carriers[j].GetCharge()==-1)
+		      else if (carriers[j].GetCharge()==1)
 			{
-			  
-			  carriers[j].Setx(xnew);	  // otherwise update position
-			  carriers[j].Sety(ynew);
+			  if ( random_number <= (1-exp(-trapping_probability_holes))){//for holes
+			    carriers[j].Setinside(0);//the charge is trapped if the randmply generated number is lower than the trapping probability
+			    LostCarriers++;
+			  }			  
+			  else  
+			    {
+			      carriers[j].Setx(xnew);	  // otherwise update position
+			      carriers[j].Sety(ynew);
+			    }
 			}
 		      
 		      /*
@@ -2241,7 +2335,17 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 	//   ChargeScale = 1;
 	//  }
 	    
-	    if (gui->GetForceGain())  cout << "Forced gain: Gain in simulation = " << qtot/(qe+qh)  <<  " Gain after corrections  = " << GainScale*(qeg+qhg)/(qe+qh)+1 << " Gain requested = "<< gui->GetYGain()  << endl;
+	    if (gui->GetForceGain())
+	      {
+		cout << "Forced gain: Gain in simulation = " << qtot/(qe+qh)  <<  " Gain after corrections  = " << GainScale*(qeg+qhg)/(qe+qh)+1 << " Gain requested = "<< gui->GetYGain()  << endl;
+				std::stringstream s3;
+		s3 << "Un-forced Gain = "<<  qtot/(qe+qh) ;
+		TLatex l;
+		gui->Getcanvasp()->cd();
+		l.DrawLatex( 20, gui->GetYMax()/3 ,s3.str().c_str());
+		gui->Getcanvasp()->Update();
+	      }
+	    
 	    else
 	      {
 		cout << "Gain in simulation = " << qtot/(qe+qh)  << endl;
@@ -2502,7 +2606,11 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 	    double Qfrac = 1./(1.+ gui->GetCDet()*1E-12/Ci);
 	    for (int i=0;i<IMaxSh;i+=Step) 
 	     {
-	       ShaperOut_V[i] = ShaperOut_Q[i]*CSATransImp*1e15*qtot*Qfrac/sh_max; // [mV/fQ *Q/Q]
+
+	       if (gui->GetSC_CSAOn()) ShaperOut_V[i] = ShaperOut_Q[i]*CSATransImp*1e15; // [mV/fQ *Q/Q]
+	       else  ShaperOut_V[i] = ShaperOut_Q[i]*CSATransImp*1e15*qtot*Qfrac/sh_max; // [mV/fQ *Q/Q]
+
+		 
 		//cout << ShaperOut_V[i] << endl;
 	     }
 	    cout << "Fill in interpolation " << endl;
@@ -2692,6 +2800,8 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 	    float CSA_t20 = 0;
 	    float CSA_t80 = 0;
 	    float CSA_t90 = 0;
+	    float CSA_t50_rise = 0;
+	    float CSA_t50_fall = 0;
 
 
 	    float BB_Vt80 = 0;
@@ -2700,6 +2810,8 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 	    float BB_Vt10 = 0;
 	    float BB_t80 = 0;
 	    float BB_t20 = 0;
+	    float BB_t50_rise = 0;
+	    float BB_t50_fall = 0;
 	    float BB_t10 = 0;
 	    float BB_t90 = 0;
 	  
@@ -2725,8 +2837,8 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 	    gui->SetCSAFTVth(0.);
 	    gui->SetBBTVth(0.);
 	    gui->SetBBFTVth(0.);
-	    NDer0_sh = (fabs(sh_max)> fabs(sh_min)) ?  NMax_sh:  Nmin_sh;
-	    NDer0_BB = (fabs(BBout_max)> fabs(BBout_min) ) ? NMax_BB :  Nmin_BB;
+	    NCSA_der0 = (fabs(sh_max)> fabs(sh_min)) ?  NMax_sh:  Nmin_sh;
+	    NBB_der0 = (fabs(BBout_max)> fabs(BBout_min) ) ? NMax_BB :  Nmin_BB;
 
 
 	    //	    if(Nsh_der_min < Nsh_der_max)
@@ -2766,54 +2878,81 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 	    //	    for (int i=2*DStep; i<totaltime-2*DStep;i++)
 	    for (int i=2*DStep; i<IMaxSh-2*DStep;i++)
 	      {
-		//		cout <<  " i = " << i << " Dstep " << DStep <<  " totaltime= " << totaltime << endl;
-		//	cout << " Crash flag 1 "<< endl;
+
 		BBArea +=BBGraph[i]*TIMEUNIT;
 		CSAArea +=ShaperOut_V[i]*TIMEUNIT;
-		// cout << " Crash flag 0 "<< endl;
-		if ((fabs(ShaperOut_V[i])+CSAx1 ) >fabs(CSAVth) && FVTh && i < NDer0_sh-20)
+		if ((fabs(ShaperOut_V[i])+CSAx1 ) >fabs(CSAVth) && FVTh && i < NCSA_der0-20)
 		  {
-		    
+		    Jitter = 0;
 		    FVTh = false;
 		    STime = (double) (i)*TIMEUNIT*1e9;
-		    float dVdt = (ShaperOut_V[i+DStep]-ShaperOut_V[i-DStep])/DT; //mV/nSec
+		    float dVdt = fabs(ShaperOut_V[i+DStep]-ShaperOut_V[i-DStep])/DT; //mV/nSec
 		    CSA_dVdt_atVth = dVdt; //mV /nSec
-		    if (dVdt != 0)  Jitter = CSA_Noise/dVdt; // in ns
+		    float Jit =  0;
+		    if (dVdt !=0 )
+		      {
+			Jitter = CSA_Noise/dVdt; // in ns
+			Jit  = gRandom->Gaus(0, Jitter);
+		      }
+		    //    if (dVdt != 0)  Jitter = CSA_Noise/dVdt; // in ns
 		    //  cout << " Crash flag 05 "<< endl;
-		    gui->SetCSATVth(STime);
+		    gui->SetCSATVth(STime + Jit); // Time of crossing plus noise
 		    gui->SetJitter(Jitter);
 		  }
 	      
 		//		cout << " Crash flag 1 "<< endl;
-		if ( (fabs(BBGraph[i])+BBx1) > fabs(BBVth) && BBFVTh && i < NDer0_BB-5)
+		if ( (fabs(BBGraph[i])+BBx1) > fabs(BBVth) && BBFVTh && i < NBB_der0-5)
 		  {
 
 		    BBFVTh = false;
 		    STime = (double) i*TIMEUNIT*1e9;
-		    float dVdt = (BBGraph[i+DStep]-BBGraph[i-DStep])/DT; //mV/Sec
+		    float dVdt = fabs((BBGraph[i+DStep]-BBGraph[i-DStep])/DT); //mV/Sec
 		    BB_dVdt_atVth = dVdt;
 		    //	    cout <<  "i =  " << i << " BBX1 " << BBx1 <<" "  << BBGraph[i+DStep] << " " << BBGraph[i-DStep] << endl;
-		  
-		    if (dVdt !=0 ) BBJitter = BB_Noise/dVdt; // in ns
+		    //Here ad Jitter
+		    BBJitter = 0;
+		    float Jit =  0;
+		    if (dVdt !=0 )
+		      {
+			BBJitter = BB_Noise/dVdt; // in ns
+			Jit  = gRandom->Gaus(0, BBJitter);
+		      }
+		    //  cout << "Jitter contribution = " << Jit << endl; 
 		    gui->SetBBJitter(BBJitter);				  
-		    gui->SetBBTVth(STime);
+		    gui->SetBBTVth(STime + Jit);
 		    // break;
 		  }
-		//	cout << " Crash flag 2 "<< endl;
-		if ( (fabs(ShaperOut_V[i])+CSAx2)<fabs(CSAVth) && !FVTh &&  i > NDer0_sh + 20)
+		if ( (fabs(ShaperOut_V[i])+CSAx2)<fabs(CSAVth) && !FVTh &&  i > NCSA_der0 + 20)
 		  {
+		    Jitter = 0;
+		    float Jit =  0;
 		    FVTh = true;
-		    float dVdt = (ShaperOut_V[i-DStep]-ShaperOut_V[i+DStep])/DT;
-		    gui->SetCSAFTVth((double) i*TIMEUNIT*1e9);
-		    if (dVdt !=0) gui->SetFJitter( CSA_Noise/dVdt);
+		    float dVdt = fabs(ShaperOut_V[i-DStep]-ShaperOut_V[i+DStep])/DT;
+		    STime = (double) (i)*TIMEUNIT*1e9;
+		    if (dVdt !=0 )
+		      {
+			Jitter = CSA_Noise/dVdt; // in ns
+			Jit  = gRandom->Gaus(0, Jitter);
+		      }
+		    gui->SetCSAFTVth(STime+Jit);
+		    gui->SetFJitter(Jitter);
 		  }
 	  
-		//	cout << " Crash flag 3 "<< endl;
-		if ( (fabs(BBGraph[i])+BBx2) <fabs(BBVth) && !BBFVTh &&  i > NDer0_BB+20)
+		if ( (fabs(BBGraph[i])+BBx2) <fabs(BBVth) && !BBFVTh &&  i > NBB_der0+20)
 		  {
 		    BBFVTh = true;
-		    //float dVdt = (BBGraph[i-10]-BBGraph[i+10])/(TIMEUNIT*20);
-		    gui->SetBBFTVth((double) i*TIMEUNIT*1e9);
+		    STime = (double) i*TIMEUNIT*1e9;
+		    float dVdt = fabs((BBGraph[i-DStep]-BBGraph[i+DStep])/DT);
+		    float Jit =  0;
+		    BBJitter = 0;
+		    if (dVdt !=0 )
+		      {
+			BBJitter = BB_Noise/dVdt; // in ns
+			Jit  = gRandom->Gaus(0, BBJitter);
+		      }
+		    //  cout << "Jitter contribution trailing edge = " << Jit << endl; 
+
+		    gui->SetBBFTVth(STime + Jit);
 		  }
 
 		if (fabs(ShaperOut_V[i])>0.1*fabs(sh_der0) &&  CSA_t10==0) CSA_t10 =  i*TIMEUNIT*1e9;
@@ -2828,6 +2967,19 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 		  {
 		    CSA_dVdt_at50pc =  (ShaperOut_V[i+DStep]-ShaperOut_V[i-DStep])/DT; //mV/nSec
 		  }
+		if (fabs(ShaperOut_V[i])>0.5*fabs(sh_der0) &&   i<NCSA_der0 && CSA_t50_rise  == 0 )
+		  {
+		    CSA_t50_rise = i*TIMEUNIT*1e9;
+
+		  }
+		if (fabs(ShaperOut_V[i])<0.5*fabs(sh_der0) &&   i>NCSA_der0 && CSA_t50_fall  == 0 )
+		  {
+		    CSA_t50_fall = i*TIMEUNIT*1e9;
+		  }
+		
+
+
+		
 		// cout << " Crash flag 4 "<< endl;
 		
 		if (fabs(ShaperOut_V[i])>0.8*fabs(sh_der0) &&  CSA_Vt80==0)
@@ -2848,8 +3000,18 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 		  }
 		if (fabs(BBGraph[i])>0.5*fabs(BB_der0) && BB_dVdt_at50pc == 0  )
 		  {
-		    BB_dVdt_at50pc =  (BBGraph[i+DStep]-BBGraph[i-DStep])/DT; //mV/nSec		    
-	
+		    BB_dVdt_at50pc =  (BBGraph[i+DStep]-BBGraph[i-DStep])/DT; //mV/nSec
+		    BB_t50_rise = i*TIMEUNIT*1e9;
+		  }
+		if (fabs(BBGraph[i])>0.5*fabs(BB_der0) && i<NBB_der0 && BB_t50_rise  == 0  )
+		  {
+		    BB_t50_rise = i*TIMEUNIT*1e9;
+
+		  }
+		if (fabs(BBGraph[i])<0.5*fabs(BB_der0) && i>NBB_der0 && BB_t50_fall  == 0  )
+		  {
+		    BB_t50_fall = i*TIMEUNIT*1e9;
+
 		  }
 		
 		if (fabs(BBGraph[i])>0.8*fabs(BB_der0) &&  BB_Vt80==0)
@@ -2883,10 +3045,11 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 	    cout << "CSA dV/dt at Vth Crossing = " <<  CSA_dVdt_atVth << " [mV/ns] (including the effect of noise)" << endl;
 	    cout << "CSA dV/dt at 20%  = " <<    CSA_dVdt_at20pc << " [mV/ns]" << endl;
 	    cout << "CSA dV/dt at 50%  = " <<    CSA_dVdt_at50pc << " [mV/ns]" << endl;
+	    cout << "CSA width at 50% = " <<  CSA_t50_fall - CSA_t50_rise << " [ns]" << endl;
 	    cout << "CSA Jitter (80-20)% = " << fabs(CSA_Noise/CSA_dVdt20_80) <<  " [ns] " << endl;
 	    cout << "CSA Jitter at Vth = " << fabs(CSA_Noise/CSA_dVdt_atVth) <<  " [ns] " << endl;	    
 	    cout << "CSA VTh Time Crossing =  " << gui->GetCSATVth() <<  " and " << gui->GetCSAFTVth() << " [ns]" << endl;
-	    cout << "CSA peak at = " << NDer0_sh*TIMEUNIT*1e9 <<  " [ns]"<< endl;
+	    cout << "CSA peak at = " << NCSA_der0*TIMEUNIT*1e9 <<  " [ns]"<< endl;
 	    cout << "CSA Maximum = " <<( (fabs(sh_max)> fabs(sh_min)) ?  sh_max:  sh_min) <<  " [mV]"<< endl;	   
 	    cout << "CSA Area = " << fabs(CSAArea*1e9) << " [pVs]" << endl;
 	    cout << "CSA measured Rise Time (20-80 %) = " <<  CSA_t20_80 << " ns" << endl;
@@ -2900,6 +3063,8 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 	    
 
 	    cout << endl;
+	    // cout << "  t50_fall = "<<  BB_t50_fall << endl;
+	    // cout << "  t50_rise = "<<  BB_t50_rise << endl;
 	    cout << "Broadband:" << endl;
 	    cout << "BB dV/dt = " << BB_dVdt <<  " [mV/ns] " << endl;
 	    cout << "BB dV/dt (80-20)% = " <<  BB_dVdt20_80 << " [mV/ns]" << endl;
@@ -2907,17 +3072,18 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 	    cout << "BB dV/dt at Vth Crossing = " <<  BB_dVdt_atVth << " [mV/ns]  (including the effect of noise)" << endl;
 	    cout << "BB dV/dt at 20% = " <<  BB_dVdt_at20pc << " [mV/ns]" << endl;
 	    cout << "BB dV/dt at 50% = " <<  BB_dVdt_at50pc << " [mV/ns]" << endl;
+	    cout << "BB width at 50% = " <<  BB_t50_fall - BB_t50_rise << " [ns]" << endl;
 	    cout << "BB measured Rise Time (20-80 %) = " <<  BB_t80-BB_t20 << " ns" << endl;
-	    cout << "BB measured Rise Time (10-90 %) = " <<  BB_t90-BB_t10 << " ns" << endl;
+	    cout << "BB measured Rise Time (10-90 %) = "<<setprecision(3) <<  BB_t90-BB_t10 << " ns" << endl;
 	    cout << "BB Jitter (t < 0.4 ns) = " << fabs(BB_Noise/BB04_dVdt) <<  " [ns] " << endl;
 	    cout << "BB Jitter (80-20)% = " << fabs(BB_Noise/BB_dVdt20_80) <<  " [ns] " << endl;
 	    cout << "BB Jitter at Vth = " << fabs(BB_Noise/BB_dVdt_atVth) <<  " [ns] " << endl;
 	    cout << "BB VTh Time Crossing =  " << gui->GetBBTVth() <<  " and " << gui->GetBBFTVth() << " [ns]" << endl;
-	    cout << "BB peak at = " << NDer0_BB*TIMEUNIT*1e9 <<  " [ns]"<< endl;
+	    cout << "BB peak at = " << NBB_der0*TIMEUNIT*1e9 <<  " [ns]"<< endl;
 	    cout << "BB Maximum = " << ((fabs(BBout_max)> fabs(BBout_min) ) ? BBout_max :  BBout_min) <<  " [mV]"<< endl;	    
 	    cout << "BB Area = " << fabs(BBArea*1e9) << " [pVs]" << endl;
 	    cout << "BB Charge = " << 1000*fabs(BBArea*1e9)/(gui->GetBBGain()*gui->GetBBImp()) << " [fC]" << endl;
-	    cout << "BB Maximun derivative = " << BB_derMax  << " at CFD = " << NBB_derMax/NDer0_BB << endl;
+	    cout << "BB Maximun derivative = " << BB_derMax  << " at CFD = " << NBB_derMax/NBB_der0 << endl;
 
 
 
@@ -2966,11 +3132,11 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 		      }
 		    else
 		      {
-			fprintf(pfile,"    x-position,    Angle, \n");
-			fprintf(pfile,"     %f    %f  \n", gui->GetXEntry(), gui->GetAngle());			
-			fprintf(pfile,"TIME[ns],     Itot[uA],      Ie[uA],     Ih[uA],      Ieg[uA],      Ihg[uA] \n");
-			fprintf(pfile,"    0.                    0          0         0            0              0              \n");
-			fprintf(pfile,"    5.                    0          0        0            0              0                \n");
+			//			fprintf(pfile,"    x-position,    Angle, \n");
+			//fprintf(pfile,"     %f    %f  \n", gui->GetXEntry(), gui->GetAngle());			
+			//fprintf(pfile,"TIME[ns],     Itot[uA],      Ie[uA],     Ih[uA],      Ieg[uA],      Ihg[uA] \n");
+			fprintf(pfile,"    0                    0          0         0            0              0              \n");
+			fprintf(pfile,"    5E-9                    0          0        0            0              0                \n");
 		      }
 		  }
 		if (i % PRINTFREQUENCY == 0 )
@@ -2981,7 +3147,8 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 		    if (gui->GetOscOn()==true) fprintf(pfile,"%f    %f    %f   %f    %f    %f    %f    %f    %f\n",(i+1)*TIMEUNIT*1e9+5.,
 		    				       itot[i]*1e6,ie[i]*1e6,ih[i]*1e6,ieg[i]*1e6,ihg[i]*1e6,
 		    			       BBGraph[i],ShaperOut_V[i],CSAOut[i]);
-		     else  fprintf(pfile,"%f    %f   %f    %f   %f   %f \n",(i+1)*TIMEUNIT*1e9+5.,itot[i]*1e6,ie[i]*1e6,ih[i]*1e6,ieg[i]*1e6,ihg[i]*1e6);
+		    //		     else  fprintf(pfile,"%f    %f   %f    %f   %f   %f \n",(i+1)*TIMEUNIT*1E9+5.,itot[i]*1e6,ie[i]*1e6,ih[i]*1e6,ieg[i]*1e6,ihg[i]*1e6);
+		    else  fprintf(pfile,"%E    %E    \n",(i+1)*TIMEUNIT+5E-9,itot[i]); //,ie[i],ih[i]*1e6,ieg[i]*1e6,ihg[i]*1e6);
 		    //fprintf(pfile,"%E %E\n",(i)*TIMEUNIT+ 2.000000E-11,itot[i]);
 		  }
 	      }
@@ -3171,15 +3338,15 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 		c1_1->cd(2)->SetLeftMargin(.15);
 		c1_1->cd(2)->SetRightMargin(.15);
 		c1_1->cd(1);
-		//	for(int k=0;k<NDer0_sh;k++) qSh_Norm_sh[k] =qSh[k]/qSh[NDer0_sh]	;
-		// for(int k=0;k<NDer0_BB;k++) qSh_Norm_BB[k] =qSh[k]/qSh[NDer0_BB]	;
+		//	for(int k=0;k<NCSA_der0;k++) qSh_Norm_sh[k] =qSh[k]/qSh[NCSA_der0]	;
+		// for(int k=0;k<NBB_der0;k++) qSh_Norm_BB[k] =qSh[k]/qSh[NBB_der0]	;
 
-		for(int k=0;k<NDer0_sh;k++) qSh_Norm_sh[k] =ShaperOut_V[k]/ShaperOut_V[NDer0_sh]	;
-		 for(int k=0;k<NDer0_BB;k++) qSh_Norm_BB[k] =BBGraph[k]/BBGraph[NDer0_BB]	;
+		for(int k=0;k<NCSA_der0;k++) qSh_Norm_sh[k] =ShaperOut_V[k]/ShaperOut_V[NCSA_der0]	;
+		 for(int k=0;k<NBB_der0;k++) qSh_Norm_BB[k] =BBGraph[k]/BBGraph[NBB_der0]	;
 
 		
 		TGraph *gr7;							
-		gr7 = new TGraph(NDer0_sh,qSh_Norm_sh,ShaperOut_der);
+		gr7 = new TGraph(NCSA_der0,qSh_Norm_sh,ShaperOut_der);
 		//	gr7 = new TGraph(IMax,qSh,CSAOut);
 		gr7->SetLineColor(4);					// set line color to green
 		gr7->SetTitle("Rising edge derivative");						// set title
@@ -3195,7 +3362,7 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 		//else if (Der_max<0 && Der_max> -70 ) gr7->GetYaxis()->SetRangeUser(-70,0.);		// set y range	       
 		// else 	 gr7->GetYaxis()->SetRangeUser(1.2*Der_min, 1.2*Der_max);		// set y range
 		TGraph *gr71;							
-		gr71 = new TGraph(NDer0_BB,qSh_Norm_BB,BBGraph_der);
+		gr71 = new TGraph(NBB_der0,qSh_Norm_BB,BBGraph_der);
 		gr71->SetLineColor(2);					// set line color to red
 		gr71->SetLineWidth(2);
 		gr71->Draw("L");	

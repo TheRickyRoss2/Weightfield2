@@ -404,7 +404,7 @@ namespace {
     };
     static const char* includePaths[] = {
 "/usr/local/root/include",
-"/root/Documents/ufsd/weightfield2/",
+"/root/Documents/Weightfield2/",
 0
     };
     static const char* fwdDeclCode = R"DICTFWDDCLS(

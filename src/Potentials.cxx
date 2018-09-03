@@ -532,8 +532,8 @@ void Potentials::SetDopingProfile(void *wfgui, int rflag)	//
       DopingRem = gui->InitialDopingRem(  poissonf*(EPSILON*EPSILONR)/ECHARGE*1e-6, gui->GetFluence(),2);
       //      cout << " After removal Doping/cm^3 = " << DopingRem*poissonf*(EPSILON*EPSILONR)/ECHARGE*1e-6 << endl; // <<== this is correct
       //     cout << " Inital Accept Removal Bulk  = " << DopingRem << " Initial Doping: " <<  poissonf*(EPSILON*EPSILONR)/ECHARGE*1e-6  << endl;
-      poissonf *= DopingRem;
-      
+      if (DopingRem < 0.00001) DopingRem = 0;
+      poissonf *= DopingRem;      
     }
   if ( gui->GetInitialDopRemoval() || gui->GetAcceptorCreation())
     {
@@ -936,9 +936,10 @@ void Potentials::Multigrid(void *wfgui, bool ReadOutTopFlag)
   // Add gainlayer doping
   //if (fabs(gui->GetDopinggainlayerValue()) > 0.001 && 1 == 2)
   //if ( fabs(gui->GetDopinggainlayerValue()) > 0.001 && VFROMDOP !=1)
+  // cout << "gui->GetGainShape() "  << gui->GetGainShape() << endl;
   if (gui->GetGainShape() !=0 && VFROMDOP != 1) // add gain  layer
     {
-      //      cout << "Gain layer region: " << gui->Getygainlayerlow() << " - " << gui->Getygainlayerhigh() << " micron" << endl;
+      // cout << "Gain layer region: " << gui->Getygainlayerlow() << " - " << gui->Getygainlayerhigh() << " micron" << endl;
       double dd = 0;
       double ddout = 0;
       

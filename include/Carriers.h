@@ -35,8 +35,8 @@
 #define FBKGAINDEPTH 0.62 
 #define FBKGAINLENGTH 1.2 
 //
-//#define FBKGAINDEPTH 1.0
-// #define FBKGAINLENGTH 1.
+#define FBKLDGAINDEPTH 0.72
+#define FBKLDGAINLENGTH 1.
 //
 #define FBKDexp 0
 //#define GAINDEPTH	        (ELECTRODE_DEPTH+FBKGAINDEPTH)	//depth at which gain layer starts 

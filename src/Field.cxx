@@ -35,7 +35,7 @@ void CalculateFields(Potentials &pot, Field **wf, Field **df)
   //  int limit = 4;
   int step = 1/pot.GetBinSizey();
   //  int step2 = 1/pot.GetBinSizey();
-  //  std::cout << " step = " << step << " step2 " <<  step2 << std::endl;
+  //  std::cout << " step = " << step << std::endl;
   //  TF1 *lin = new TF1("lin","[0]+[1]*x",0,pot.GetBinSizey()*1e-6*(limit*2+1));
   TF1 *Vd = new TF1("Vd","pol2",0,pot.GetYMAX());
 
@@ -45,9 +45,10 @@ void CalculateFields(Potentials &pot, Field **wf, Field **df)
 	{
 	  //	  gVd->SetPoint(j,pot.GetBinSizey()*1e-6*j,pot.Getdpot(j,i));
 	  
-	  //if (i==10) std::cout <<  j << " " << pot.Getdpot(j,i) << " " << pot.Getdpot(j-1,i) << " " << pot.Getdpot(j,i) - pot.Getdpot(j-1,i) << std::endl;
+	  //	  if (i== pot.GetXMAX()/2) std::cout << j*pot.GetBinSizey() << " " << ( pot.Getdpot(j,i) - pot.Getdpot(j-1,i) )/(pot.GetBinSizey()*1e-6) << std::endl;
 	  wf[j][i].SetField(-( pot.Getwpot(j,i) - pot.Getwpot(j,(i-1+pot.GetXMAX())%(pot.GetXMAX())) )/(pot.GetBinSizex()*1e-6),
 			    -( pot.Getwpot(j,i) - pot.Getwpot(j-1,i) )/(pot.GetBinSizey()*1e-6));
+	  
 	  df[j][i].SetField(-( pot.Getdpot(j,i) - pot.Getdpot(j,(i-1+pot.GetXMAX())%(pot.GetXMAX())) )/(pot.GetBinSizex()*1e-6),
 			    -( pot.Getdpot(j,i) - pot.Getdpot(j-1,i) ) /(pot.GetBinSizey()*1e-6));
 	}
@@ -75,16 +76,15 @@ void CalculateFields(Potentials &pot, Field **wf, Field **df)
 	    }
 	}
 	      
-	      //if (i==10) std::cout <<  j << " " << pot.Getdpot(j,i) << " " << pot.Getdpot(j-1,i) << " " << pot.Getdpot(j,i) - pot.Getdpot(j-1,i) << std::endl;
 
-
+      // Set the field at y = 0 equal to y= YMAX-2
       for (int y=0; y<=step/2; y++)
-	df[y][i].SetField(df[(int) (step/2+1)][i].GetFieldx(),df[(int) (step/2+1)][i].GetFieldy());
+            df[y][i].SetField(df[(int) (step/2+1)][i].GetFieldx(),df[(int) (step/2+1)][i].GetFieldy());
       
-      // Set the field at y = YMAX-1 equal to y= YMAX-2
+      //       Set the field at y = YMAX-1 equal to y= YMAX-2
 
       for (int y=pot.GetYMAX()-step/2; y<pot.GetYMAX(); y++)
-	  df[y][i].SetField(df[pot.GetYMAX()-step/2-1][i].GetFieldx(),df[pot.GetYMAX()-step/2-1][i].GetFieldy());
+	df[y][i].SetField(df[pot.GetYMAX()-step/2-1][i].GetFieldx(),df[pot.GetYMAX()-step/2-1][i].GetFieldy());
       //     
 
       wf[0][i].SetField(wf[1][i].GetFieldx(),wf[1][i].GetFieldy());
@@ -97,7 +97,6 @@ void CalculateFields(Potentials &pot, Field **wf, Field **df)
 }
 
 
- 
 ///////////////////////////////////////////////////////////////////
 void CalculateAbsFields(Potentials &pot, Field** wf,Field** df) {
 	for (int i=0; i<pot.GetXMAX(); i++)
@@ -106,6 +105,7 @@ void CalculateAbsFields(Potentials &pot, Field** wf,Field** df) {
 		{
 			df[j][i].Setabs(sqrt((df[j][i].GetFieldx())*(df[j][i].GetFieldx())+(df[j][i].GetFieldy())*(df[j][i].GetFieldy())));
 			wf[j][i].Setabs(sqrt((wf[j][i].GetFieldx())*(wf[j][i].GetFieldx())+(wf[j][i].GetFieldy())*(wf[j][i].GetFieldy())));
+			//	if (i== pot.GetXMAX()/2) std::cout << "posiz=" << j*pot.GetBinSizey() << " " << df[j][i].Getabs() << std::endl;
 		}
 	}
 }
