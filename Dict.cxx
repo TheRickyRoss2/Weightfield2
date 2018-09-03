@@ -1,6 +1,6 @@
 // Do NOT change. Changes will be lost next time file is generated
 
-#define R__DICTIONARY_FILENAME srcdIDict
+#define R__DICTIONARY_FILENAME Dict
 
 /*******************************************************************/
 #include <stddef.h>
@@ -37,7 +37,7 @@
 namespace std {} using namespace std;
 
 // Header files passed as explicit arguments
-#include "include/WFGUI.h"
+#include "WFGUI.h"
 
 // Header files passed via #pragma extra_include
 
@@ -54,7 +54,7 @@ namespace ROOT {
       ::Potentials *ptr = 0;
       static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< ::Potentials >(0);
       static ::ROOT::TGenericClassInfo 
-         instance("Potentials", ::Potentials::Class_Version(), "include/Potentials.h", 27,
+         instance("Potentials", ::Potentials::Class_Version(), "Potentials.h", 27,
                   typeid(::Potentials), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &::Potentials::Dictionary, isa_proxy, 4,
                   sizeof(::Potentials) );
@@ -86,7 +86,7 @@ namespace ROOT {
       ::Field *ptr = 0;
       static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< ::Field >(0);
       static ::ROOT::TGenericClassInfo 
-         instance("Field", ::Field::Class_Version(), "include/Field.h", 7,
+         instance("Field", ::Field::Class_Version(), "Field.h", 7,
                   typeid(::Field), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &::Field::Dictionary, isa_proxy, 4,
                   sizeof(::Field) );
@@ -120,7 +120,7 @@ namespace ROOT {
       ::Carriers *ptr = 0;
       static ::TVirtualIsAProxy* isa_proxy = new ::TIsAProxy(typeid(::Carriers));
       static ::ROOT::TGenericClassInfo 
-         instance("Carriers", "include/Carriers.h", 71,
+         instance("Carriers", "Carriers.h", 71,
                   typeid(::Carriers), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &Carriers_Dictionary, isa_proxy, 4,
                   sizeof(::Carriers) );
@@ -161,7 +161,7 @@ namespace ROOT {
       ::WFGUI *ptr = 0;
       static ::TVirtualIsAProxy* isa_proxy = new ::TInstrumentedIsAProxy< ::WFGUI >(0);
       static ::ROOT::TGenericClassInfo 
-         instance("WFGUI", ::WFGUI::Class_Version(), "include/WFGUI.h", 53,
+         instance("WFGUI", ::WFGUI::Class_Version(), "WFGUI.h", 53,
                   typeid(::WFGUI), ::ROOT::Internal::DefineBehavior(ptr, ptr),
                   &::WFGUI::Dictionary, isa_proxy, 4,
                   sizeof(::WFGUI) );
@@ -209,7 +209,7 @@ TClass *Potentials::Dictionary()
 //______________________________________________________________________________
 TClass *Potentials::Class()
 {
-   if (!fgIsA.load()) { R__LOCKGUARD2(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::Potentials*)0x0)->GetClass(); }
+   if (!fgIsA.load()) { R__LOCKGUARD(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::Potentials*)0x0)->GetClass(); }
    return fgIsA;
 }
 
@@ -244,7 +244,7 @@ TClass *Field::Dictionary()
 //______________________________________________________________________________
 TClass *Field::Class()
 {
-   if (!fgIsA.load()) { R__LOCKGUARD2(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::Field*)0x0)->GetClass(); }
+   if (!fgIsA.load()) { R__LOCKGUARD(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::Field*)0x0)->GetClass(); }
    return fgIsA;
 }
 
@@ -279,7 +279,7 @@ TClass *WFGUI::Dictionary()
 //______________________________________________________________________________
 TClass *WFGUI::Class()
 {
-   if (!fgIsA.load()) { R__LOCKGUARD2(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::WFGUI*)0x0)->GetClass(); }
+   if (!fgIsA.load()) { R__LOCKGUARD(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::WFGUI*)0x0)->GetClass(); }
    return fgIsA;
 }
 
@@ -399,12 +399,12 @@ namespace ROOT {
 namespace {
   void TriggerDictionaryInitialization_Dict_Impl() {
     static const char* headers[] = {
-"include/WFGUI.h",
+"WFGUI.h",
 0
     };
     static const char* includePaths[] = {
-"/usr/local/root/include",
-"/root/Documents/Weightfield2/",
+"/root61206/include",
+"/Users/nicolo/work/GruppoV_UFSD/Weightfield_evolution/weightfield4.66/",
 0
     };
     static const char* fwdDeclCode = R"DICTFWDDCLS(
@@ -413,10 +413,10 @@ namespace {
 #pragma clang diagnostic ignored "-Wignored-attributes"
 #pragma clang diagnostic ignored "-Wreturn-type-c-linkage"
 extern int __Cling_Autoloading_Map;
-class __attribute__((annotate("$clingAutoload$include/WFGUI.h")))  Potentials;
-class __attribute__((annotate("$clingAutoload$include/WFGUI.h")))  Field;
-class __attribute__((annotate("$clingAutoload$include/WFGUI.h")))  Carriers;
-class __attribute__((annotate(R"ATTRDUMP(muss auskommentiert sein wenn .x ... .cxx+)ATTRDUMP"))) __attribute__((annotate(R"ATTRDUMP(muss auskommentiert sein wenn .x ... .cxx+)ATTRDUMP"))) __attribute__((annotate(R"ATTRDUMP(muss auskommentiert sein wenn .x ... .cxx+)ATTRDUMP"))) __attribute__((annotate("$clingAutoload$include/WFGUI.h")))  WFGUI;
+class __attribute__((annotate("$clingAutoload$Potentials.h")))  __attribute__((annotate("$clingAutoload$WFGUI.h")))  Potentials;
+class __attribute__((annotate("$clingAutoload$Field.h")))  __attribute__((annotate("$clingAutoload$WFGUI.h")))  Field;
+class __attribute__((annotate("$clingAutoload$Carriers.h")))  __attribute__((annotate("$clingAutoload$WFGUI.h")))  Carriers;
+class __attribute__((annotate(R"ATTRDUMP(muss auskommentiert sein wenn .x ... .cxx+)ATTRDUMP"))) __attribute__((annotate(R"ATTRDUMP(muss auskommentiert sein wenn .x ... .cxx+)ATTRDUMP"))) __attribute__((annotate(R"ATTRDUMP(muss auskommentiert sein wenn .x ... .cxx+)ATTRDUMP"))) __attribute__((annotate(R"ATTRDUMP(muss auskommentiert sein wenn .x ... .cxx+)ATTRDUMP"))) __attribute__((annotate("$clingAutoload$WFGUI.h")))  WFGUI;
 )DICTFWDDCLS";
     static const char* payloadCode = R"DICTPAYLOAD(
 #line 1 "Dict dictionary payload"
@@ -426,7 +426,7 @@ class __attribute__((annotate(R"ATTRDUMP(muss auskommentiert sein wenn .x ... .c
 #endif
 
 #define _BACKWARD_BACKWARD_WARNING_H
-#include "include/WFGUI.h"
+#include "WFGUI.h"
 
 #undef  _BACKWARD_BACKWARD_WARNING_H
 )DICTPAYLOAD";
