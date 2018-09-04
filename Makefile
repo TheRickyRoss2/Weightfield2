@@ -4,7 +4,7 @@
 EXE  = weightfield
 
 CC     = g++
-CFLAGS = -Wall -Wextra `root-config --cflags --glibs` -Iinclude
+CFLAGS = -Wall -Wextra -std=c++17 `root-config --cflags --glibs` -Iinclude -I.
 CLING = rootcling
 CLING_FLAGS = -f
 
@@ -20,9 +20,9 @@ OBJ = $(SRC:$(SRC_DIR)/%.cxx=$(OBJ_DIR)/%.o)
 #
 # Debug build settings
 #
-DBGDIR = debug
-DBGEXE = $(DBGDIR)/$(EXE)
-DBGOBJS = $(SRC:$(SRC_DIR)/%.cxx=$(DBGDIR)/%.o)
+DBG_DIR = debug
+DBGEXE = $(DBG_DIR)/$(EXE)
+DBG_OBJ = $(SRC:$(SRC_DIR)/%.cxx=$(DBG_DIR)/%.o)
 DBGCFLAGS = -g -O0 -DDEBUG
 
 #
@@ -40,12 +40,12 @@ all: prep release
 #
 # Debug rules
 #
-debug: prepdbg $(DBGEXE)
+debug: prep $(DBGEXE)
 
-$(DBGEXE): $(DBGOBJS)
+$(DBGEXE): $(DBG_OBJ)
 	$(CC) $(CFLAGS) $(DBGCFLAGS) $^ -o $@
 
-$(DBGDIR)/%.o: $(SRC_DIR)/%.cxx
+$(DBG_DIR)/%.o: $(SRC_DIR)/%.cxx
 	$(CC) $(CFLAGS) $(DBGCFLAGS) -c $< -o $@
 
 #
@@ -63,19 +63,12 @@ $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cxx
 # Other rules
 #
 prep:
-	@mkdir -p $(DBGDIR) $(REL_DIR) $(OBJ_DIR)
+	@mkdir -p $(DBG_DIR) $(REL_DIR) $(OBJ_DIR)
 	$(CLING) $(CLING_FLAGS) $(SRC_DIR)/Dict.cxx -c $(INCLUDE_DIR)/WFGUI.h $(INCLUDE_DIR)/LinkDef.h
-	g++ -Wall -Wextra `root-config --cflags --glibs` -I. -O3 -DNDEBUG -c src/Dict.cxx -o obj/Dict.o
-	mv src/Dict_rdict.pcm .
-
-prepdbg:
-	@mkdir -p $(DBGDIR) $(REL_DIR) $(OBJ_DIR)
-	$(CLING) $(CLING_FLAGS) $(SRC_DIR)/Dict.cxx -c $(INCLUDE_DIR)/WFGUI.h $(INCLUDE_DIR)/LinkDef.h
-	g++ -Wall -Wextra `root-config --cflags --glibs` -I. -O3 -DNDEBUG -c src/Dict.cxx -o debug/Dict.o
-	mv src/Dict_rdict.pcm .
+	mv $(SRC_DIR)/Dict_rdict.pcm .
 
 remake: clean all
 
 clean:
-	rm -f $(RELEXE) $(OBJ) $(DBGEXE) $(DBGOBJS) Dict_rdict.pcm
+	rm -f $(RELEXE) $(OBJ) $(DBGEXE) $(DBG_OBJ) Dict_rdict.pcm
 
