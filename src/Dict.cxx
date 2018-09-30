@@ -209,7 +209,7 @@ TClass *Potentials::Dictionary()
 //______________________________________________________________________________
 TClass *Potentials::Class()
 {
-   if (!fgIsA.load()) { R__LOCKGUARD2(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::Potentials*)0x0)->GetClass(); }
+   if (!fgIsA.load()) { R__LOCKGUARD(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::Potentials*)0x0)->GetClass(); }
    return fgIsA;
 }
 
@@ -244,7 +244,7 @@ TClass *Field::Dictionary()
 //______________________________________________________________________________
 TClass *Field::Class()
 {
-   if (!fgIsA.load()) { R__LOCKGUARD2(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::Field*)0x0)->GetClass(); }
+   if (!fgIsA.load()) { R__LOCKGUARD(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::Field*)0x0)->GetClass(); }
    return fgIsA;
 }
 
@@ -279,7 +279,7 @@ TClass *WFGUI::Dictionary()
 //______________________________________________________________________________
 TClass *WFGUI::Class()
 {
-   if (!fgIsA.load()) { R__LOCKGUARD2(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::WFGUI*)0x0)->GetClass(); }
+   if (!fgIsA.load()) { R__LOCKGUARD(gInterpreterMutex); fgIsA = ::ROOT::GenerateInitInstanceLocal((const ::WFGUI*)0x0)->GetClass(); }
    return fgIsA;
 }
 
@@ -404,7 +404,7 @@ namespace {
     };
     static const char* includePaths[] = {
 "/usr/local/root/include",
-"/root/Documents/Weightfield2/",
+"/home/ric/weightfield2/",
 0
     };
     static const char* fwdDeclCode = R"DICTFWDDCLS(
@@ -416,7 +416,7 @@ extern int __Cling_Autoloading_Map;
 class __attribute__((annotate("$clingAutoload$include/WFGUI.h")))  Potentials;
 class __attribute__((annotate("$clingAutoload$include/WFGUI.h")))  Field;
 class __attribute__((annotate("$clingAutoload$include/WFGUI.h")))  Carriers;
-class __attribute__((annotate(R"ATTRDUMP(muss auskommentiert sein wenn .x ... .cxx+)ATTRDUMP"))) __attribute__((annotate(R"ATTRDUMP(muss auskommentiert sein wenn .x ... .cxx+)ATTRDUMP"))) __attribute__((annotate(R"ATTRDUMP(muss auskommentiert sein wenn .x ... .cxx+)ATTRDUMP"))) __attribute__((annotate("$clingAutoload$include/WFGUI.h")))  WFGUI;
+class __attribute__((annotate(R"ATTRDUMP(muss auskommentiert sein wenn .x ... .cxx+)ATTRDUMP"))) __attribute__((annotate(R"ATTRDUMP(muss auskommentiert sein wenn .x ... .cxx+)ATTRDUMP"))) __attribute__((annotate(R"ATTRDUMP(muss auskommentiert sein wenn .x ... .cxx+)ATTRDUMP"))) __attribute__((annotate(R"ATTRDUMP(muss auskommentiert sein wenn .x ... .cxx+)ATTRDUMP"))) __attribute__((annotate("$clingAutoload$include/WFGUI.h")))  WFGUI;
 )DICTFWDDCLS";
     static const char* payloadCode = R"DICTPAYLOAD(
 #line 1 "Dict dictionary payload"
@@ -441,7 +441,7 @@ nullptr};
     if (!isInitialized) {
       TROOT::RegisterModule("Dict",
         headers, includePaths, payloadCode, fwdDeclCode,
-        TriggerDictionaryInitialization_Dict_Impl, {}, classesHeaders);
+        TriggerDictionaryInitialization_Dict_Impl, {}, classesHeaders, /*has no C++ module*/false);
       isInitialized = true;
     }
   }

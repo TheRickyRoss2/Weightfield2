@@ -110,19 +110,17 @@ std::map<std::string, double> GetParameters(const char* ifname)
 
 WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFrame(p,w,h), dwpot(Potentials(300,1,200,30)) {
 
-    //take intial varible names from parameters file
+  //  take intial varible names from parameters file
   //  const char* ifname = "parameters.dat";
   string fname1  = "parameters.dat";
   string ifname;
   string userFile;
-  if(app->Argc() < 2)
-    {
+  if(app->Argc() < 2){
       fname1 = "parameters.dat";
-    }
-  else
-    {
+  }else{
       fname1 = app->Argv(1);
-    }
+  }
+
   string fname = "sensors/data/";
 
   ifname =  fname+fname1;
