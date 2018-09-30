@@ -4,7 +4,8 @@
 EXE  = weightfield
 
 CC     = g++
-CFLAGS = -Wall -Wextra -std=c++17 `root-config --cflags --glibs` -Iinclude -I.
+CFLAGS = -Wall -Wextra  `root-config --cflags` -Iinclude -I.
+LINK_FLAGS = `root-config --glibs`
 CLING = rootcling
 CLING_FLAGS = -f
 
@@ -43,7 +44,7 @@ all: prep release
 debug: prep $(DBGEXE)
 
 $(DBGEXE): $(DBG_OBJ)
-	$(CC) $(CFLAGS) $(DBGCFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) $(DBGCFLAGS) $^ -o $@ $(LINK_FLAGS)
 
 $(DBG_DIR)/%.o: $(SRC_DIR)/%.cxx
 	$(CC) $(CFLAGS) $(DBGCFLAGS) -c $< -o $@
@@ -54,7 +55,7 @@ $(DBG_DIR)/%.o: $(SRC_DIR)/%.cxx
 release: $(RELEXE)
 
 $(RELEXE): $(OBJ)
-	$(CC) $(CFLAGS) $(RELCFLAGS) $^ -o $@
+	$(CC) $(CFLAGS) $(RELCFLAGS) $^ -o $@ $(LINK_FLAGS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cxx
 	$(CC) $(CFLAGS) $(RELCFLAGS) -c $< -o $@
