@@ -1,17 +1,56 @@
-#include "WFGUI.h"
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <string>
 #include <map>
 
+#include "WFGUI.h"
+#include "yaml.h"
+
 
 ///-----------------------------------------------------\\ VARIABLES INITIAL VALUES //-------------------------------------------------------------///
 
+/**
+ * Yaml version of config loader
+ */
+std::map<std::string, double> getParametersYaml(const char* inputFilename)
+{
+  std::map<std::string, double> configValueMap;
+  std::cout << "Loading yaml " << inputFilename << std::endl;
+  YAML::Node inputFile = YAML::LoadFile(inputFilename);
+  double numStrips = inputFile["dimensions"]["strip_num"].as<double>();
+  std::cout << "Strips:" << numStrips << std::endl;
+  return configValueMap;
+
+}
+
+/**
+ * Check if file ends in .yml
+ */
+bool isYamlFile(const char* inputFilename)
+{
+  std::string inputFilenameString(inputFilename);
+  size_t i = inputFilenameString.rfind('.', inputFilenameString.length());
+
+  if(i != std::string::npos){
+    std::string fileExtension = inputFilenameString.substr(
+      i+1,
+      inputFilenameString.length()-i
+    );
+
+    return fileExtension.compare("yml") == 0;
+  }
+  return false;
+}
+
 std::map<std::string, double> GetParameters(const char* ifname)
 {
-	std::map<std::string, double> valueMap;
 
+  if(isYamlFile(ifname)){
+    getParametersYaml(ifname);
+  }
+
+	std::map<std::string, double> valueMap;
 	// prepare map
 
 	//#########################	
@@ -102,7 +141,6 @@ std::map<std::string, double> GetParameters(const char* ifname)
 
 	return valueMap;
 }
-
 ///---------------------------------------------------------------------------------------------------------------------------------------------///
 
 
@@ -123,7 +161,7 @@ WFGUI::WFGUI(const TGWindow *p, UInt_t w, UInt_t h, TApplication *app): TGMainFr
 
   string fname = "sensors/data/";
 
-  ifname =  fname+fname1;
+  ifname = fname1;
   std::map<std::string, double> valueMap = GetParameters(ifname.c_str());
   this->UserValues = valueMap;
 
@@ -4816,8 +4854,7 @@ void WFGUI::CloseWindow() // Got close message for this MainFrame. Terminates th
 /////////////////////////////////////////////////////////////////////////////////////////////
 void WFGUI::LoadData(){
 
-  string fname = "sensors/data/";
-  fname+=SaveFileName->GetText();
+  string fname = SaveFileName->GetText();
   //  std::cout << "Loading data from file " << fname.c_str() << std::endl;
   std::map<std::string, double> valueMap = GetParameters(fname.c_str());
 

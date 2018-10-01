@@ -1,0 +1,9 @@
+[submodule "lib/yamp-cpp"]
+	path = lib/yamp-cpp
+	url = http://github.com/jbeder/yaml-cpp
+[submodule "lib/yaml-cpp"]
+	path = lib/yaml-cpp
+	url = http://github.com/jbeder/yaml-cpp
+[submodule "deps/yaml-cpp"]
+	path = deps/yaml-cpp
+	url = http://github.com/jbeder/yaml-cpp

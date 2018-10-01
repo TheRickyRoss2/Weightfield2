@@ -4,10 +4,12 @@
 EXE  = weightfield
 
 CC     = g++
-CFLAGS = -Wall -Wextra  `root-config --cflags` -Iinclude -I.
-LINK_FLAGS = `root-config --glibs`
+CFLAGS = -Wall -Wextra  `root-config --cflags` -L./deps/yaml-cpp/build
+LINK_FLAGS = `root-config --glibs` -lyaml-cpp
+INCLUDE_FLAGS = -I./deps/yaml-cpp/include/yaml-cpp -Iinclude -I. -I./deps/yaml-cpp/include
 CLING = rootcling
 CLING_FLAGS = -f
+
 
 #
 # Project files
@@ -47,7 +49,7 @@ $(DBGEXE): $(DBG_OBJ)
 	$(CC) $(CFLAGS) $(DBGCFLAGS) $^ -o $@ $(LINK_FLAGS)
 
 $(DBG_DIR)/%.o: $(SRC_DIR)/%.cxx
-	$(CC) $(CFLAGS) $(DBGCFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(DBGCFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
 
 #
 # Release rules
@@ -58,13 +60,15 @@ $(RELEXE): $(OBJ)
 	$(CC) $(CFLAGS) $(RELCFLAGS) $^ -o $@ $(LINK_FLAGS)
 
 $(OBJ_DIR)/%.o: $(SRC_DIR)/%.cxx
-	$(CC) $(CFLAGS) $(RELCFLAGS) -c $< -o $@
+	$(CC) $(CFLAGS) $(RELCFLAGS) $(INCLUDE_FLAGS) -c $< -o $@
 
 #
 # Other rules
 #
 prep:
-	@mkdir -p $(DBG_DIR) $(REL_DIR) $(OBJ_DIR)
+	# Build yaml parser dependancy
+	@mkdir -p $(DBG_DIR) $(REL_DIR) $(OBJ_DIR) ./deps/yaml-cpp/build
+	cd ./deps/yaml-cpp/build; cmake -DYAML_CPP_BUILD_TESTS=OFF .. ; make
 	$(CLING) $(CLING_FLAGS) $(SRC_DIR)/Dict.cxx -c $(INCLUDE_DIR)/WFGUI.h $(INCLUDE_DIR)/LinkDef.h
 	mv $(SRC_DIR)/Dict_rdict.pcm .
 
