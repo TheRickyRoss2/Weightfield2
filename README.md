@@ -9,9 +9,14 @@ Main page here
 
 
 ### Installing
-
+Download with
+```
+git clone --recurse-submodules
+```
 To compile just type make
 
 ```
 make
 ```
+Ensure that you have downloaded yaml-cpp before building
+We now use a yaml parser for configuration options
