@@ -34,7 +34,6 @@
 # ROOT Files
 *.root
 *.dat
-*.txt
 *.h~
 *.pcm
 *.d*

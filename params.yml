@@ -1,0 +1,45 @@
+dimensions:
+  number_strips: 1
+  detector_height: 45
+  strip_pitch: 500
+  strip_width: 490
+  gain_scale: 15
+  he_gain_ratio: 0.0
+  gain_layer_recess: 0
+  laser_pos_y: 100
+  doping_level: 1.1
+  step_size_y: 0.1
+  step_size_x: 2
+
+irradiation:
+  irradiation: 1
+  double_junction: 1
+  na_over_nd: 0.5
+
+voltage:
+  bias_voltage: 160
+  depletion_voltage: 20
+
+electronics:
+  capacitance: 3
+  inductance: 5
+  impedance: 60
+  oscilloscope_bandwidth: 2.5
+  shaper_integration_time: 3.5
+  shaper_decay_time: 6.1
+  shaper_transimpedance: 7
+  shaper_noise: 0.9
+  voltage_threshold: 0.3
+  bb_bw: 1.2
+  bb_gain: 94
+  bb_vth: 0.3
+  bb_noise: 1.4
+
+control:
+  precision: 5
+  sampling: 0.1
+  number_particles: 1
+  set_range: 10
+  calib: 5
+  userq: 65
+  temperature: 250
