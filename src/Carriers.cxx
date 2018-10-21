@@ -1015,7 +1015,7 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 
 	//	int TMAX= (int) 30*1.e-9/TIMEUNIT; //Nicolo //=10000;
 
-	int TMAX= (int) TIMEMAX; //Nicolo /;  
+  int TMAX = int(60 * 1.0e-9 / TIMEUNIT); //Nicolo /;
 
 	bool bStop=false;		//bool to join currentsthread
 	double edpar=0;			// absolute value of E field
@@ -2471,7 +2471,7 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 	    gui->GetCalculatingLabel()->SetTitle("Calculating electronic response...");
 	    // nicolo
 
-	    IMaxSh = min( (IMax+IintTime), int(TIMEMAX)); // Maximum number of bins for electronics (limited at 30 ns)
+        IMaxSh = min((IMax + IintTime), int(TMAX)); // Maximum number of bins for electronics (limited at 30 ns)
 
 	    cout << "Number of steps Imaxsh = " << IMaxSh << " for a total simulation of = " <<  IMaxSh*TIMEUNIT*1e9 << " [ns] " << endl;
 
@@ -3139,7 +3139,7 @@ void CalculateCurrents(Potentials &pot, Field **dfield, Field **wfield, Carriers
 			fprintf(pfile,"    5E-9                    0          0        0            0              0                \n");
 		      }
 		  }
-		if (i % PRINTFREQUENCY == 0 )
+            if (i % int(PRINTFREQUENCY) == 0)
 		  {
 
 
