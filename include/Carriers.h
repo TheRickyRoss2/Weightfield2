@@ -5,7 +5,7 @@
 
 #include "Field.h"
 
-constexpr double EPSILON = 8.854e-12;       // vacuum permittivity
+constexpr double EPSILON = 8.854e-12; // vacuum permittivity
 constexpr double EPSILONR = 11.9;      // relative permittivity of silicon
 constexpr double ECHARGE = 1.602177e-19;    // elementary charge in C
 
@@ -41,7 +41,7 @@ constexpr double FBKGAINLENGTH = 1.2;
 constexpr double FBKLDGAINDEPTH = 0.72;
 constexpr double FBKLDGAINLENGTH = 1.;
 constexpr double FBKDexp = 0;
-constexpr double VFROMDOP = 0;       // ==1 calculate potential from doping
+// ==1 calculate potential from doping
 constexpr double ELECTRODE_DEPTH = 0.3;     // Depth of the electrodes, charged in this space do no generate current
 
 constexpr double ALPHA_AVALANCHE = 0.746;     //second townsend coefficient
@@ -65,23 +65,16 @@ constexpr double XRayRangeDef = 16;         // 10 cm absortion lenght?
 class Carriers {
 
  private:
-  double x;        // x position of carrier
-  double y;        // y position of carrier
-  int inside;        // if carrier inside detector, inside=1 ... if outside inside=0, if not yet created inside=-1
-  double etheta;    // lorentz angle of electrons
-  double htheta;    // lorentz angle of holes
-  //		int mipcharge; // number of carriers
-  int charge;        //-1= electron +1=hole
-  double vx;        //velocity along x axis
-  double vy;        //velocity along y axis
-  bool egain;        //if electron is a gain electron or not true=gain false=no gain
-  // double ygain;	//position of gain layer in ultrafast
-  // bool alpha_above;	//if alpha particle comes from above or not
+  double x;       // x position of carrier
+  double y;       // y position of carrier
+  int inside;     // if carrier inside detector, inside=1 ... if outside inside=0, if not yet created inside=-1
+  double etheta;  // lorentz angle of electrons
+  double htheta;  // lorentz angle of holes
+  int charge;     //-1= electron +1=hole
+  double vx;      //velocity along x axis
+  double vy;      //velocity along y axis
+  bool egain;     //if electron is a gain electron or not true=gain false=no gain
   double leftovergain;
-  //		double alphaRange;	//range of alpha particles
-// 		double tau;		//time constant (Oscill BW)^-1
-
-
 
  public:
   Carriers();            // carrier constructor
@@ -109,12 +102,19 @@ class Carriers {
 
 };
 
-void CreateCharges(Potentials &,Carriers *,int, void*);							// create charges along path of particle
-void CreateChargesAlphaTop(Potentials &pot, Carriers *carriers, int hit, void*);				//creates alpha particles
-void CreateChargesAlphaBottom(Potentials &pot, Carriers *carriers, int hit, void*);
-void CreateChargesMipSide(Potentials &pot, Carriers *carriers, int hit, void*);
-void CreateChargesLaserSide(Potentials &pot, Carriers *carriers, int hit, void*);
+void CreateCharges(Potentials &,
+                   Carriers *,
+                   int,
+                   void *);                            // create charges along path of particle
+void CreateChargesAlphaTop(Potentials &pot,
+                           Carriers *carriers,
+                           int hit,
+                           void *);                //creates alpha particles
+void CreateChargesAlphaBottom(Potentials &pot, Carriers *carriers, int hit, void *);
+void CreateChargesMipSide(Potentials &pot, Carriers *carriers, int hit, void *);
+void CreateChargesLaserSide(Potentials &pot, Carriers *carriers, int hit, void *);
 void CreateChargesXRay(Potentials &pot, Carriers *carriers, int hitx, int hity, void *);
 void CalculateCurrents(Potentials &, Field **, Field **, Carriers *, void *, int);        // calculate currents
 void SetLorentz(Potentials &, Carriers *, double, double, int);                                    // set lorentz angle
+
 #endif
