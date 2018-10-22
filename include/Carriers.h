@@ -102,19 +102,13 @@ class Carriers {
 
 };
 
-void CreateCharges(Potentials &,
-                   Carriers *,
-                   int,
-                   void *);                            // create charges along path of particle
-void CreateChargesAlphaTop(Potentials &pot,
-                           Carriers *carriers,
-                           int hit,
-                           void *);                //creates alpha particles
+void CreateCharges(Potentials &, Carriers *, int, void *); // create charges along path of particle
+void CreateChargesAlphaTop(Potentials &pot, Carriers *carriers, int hit, void *); // creates alpha particles
 void CreateChargesAlphaBottom(Potentials &pot, Carriers *carriers, int hit, void *);
 void CreateChargesMipSide(Potentials &pot, Carriers *carriers, int hit, void *);
 void CreateChargesLaserSide(Potentials &pot, Carriers *carriers, int hit, void *);
 void CreateChargesXRay(Potentials &pot, Carriers *carriers, int hitx, int hity, void *);
-void CalculateCurrents(Potentials &, Field **, Field **, Carriers *, void *, int);        // calculate currents
-void SetLorentz(Potentials &, Carriers *, double, double, int);                                    // set lorentz angle
+void CalculateCurrents(Potentials &, Field **, Field **, Carriers *, void *, int); // calculate currents
+void SetLorentz(Potentials &, Carriers *, double, double, int); // set lorentz angle
 
 #endif
