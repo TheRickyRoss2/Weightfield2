@@ -31,30 +31,6 @@ void CalculateFields(Potentials &pot, Field **wf, Field **df) {
           -(pot.Getdpot(j, i) - pot.Getdpot(j, (i - 1 + pot.GetXMAX()) % (pot.GetXMAX()))) / (pot.GetBinSizex() * 1e-6),
           -(pot.Getdpot(j, i) - pot.Getdpot(j - 1, i)) / (pot.GetBinSizey() * 1e-6));
     }
-    if (VFROMDOP == 1) {
-      for (int y = step / 2; y < pot.GetYMAX() - 3. / 2. * step; y += step) {
-        //	      std::cout << y << std::endl;
-        //     NewPot = 0;
-        for (int y1 = 0; y1 < 2 * step; y1++) {
-          gVd->SetPoint(y1, y1, pot.Getdpot(y + y1 - step / 2, i));
-          //	  std::cout << y1 << " y1 y+y1-step/2 = " << y+y1-step/2<< " Max " << pot.GetYMAX() <<   std::endl;
-        }
-        gVd->Fit("Vd", "QN", "goff", 0, pot.GetYMAX());
-        for (int y2 = 0; y2 < step; y2++) {
-          //	  std::cout << y2 << "y2 step = " << step<< std::endl;
-          pot.SetdPotential(y + y2, i, Vd->Eval(step / 2 + y2));
-          if (i == pot.GetXMAX() / 2 && Vd->Eval(y2) < 0)
-            std::cout << " Warning: negative potential at y =  " << (y + y2) * pot.GetBinSizey() << " micron "
-                      << std::endl;
-          //  if (i==100) std::cout << " y = " <<  (int) (y+ step/2.) << " E field: " << -Vd->Derivative((int)step/2.)*1e7 <<  "  old efield " <<  df[ (int) (y+ step/2.)][i].GetFieldy() << std::endl;
-          df[(int) (y + y2)][i].SetField(
-              -(pot.Getdpot(y, i) - pot.Getdpot(y, (i - 1 + pot.GetXMAX()) % (pot.GetXMAX())))
-                  / (pot.GetBinSizex() * 1e-6),
-              -(Vd->Derivative(step / 2 + y2) * 1e7));
-        }
-      }
-    }
-
 
     // Set the field at y = 0 equal to y= YMAX-2
     for (int y = 0; y <= step / 2; y++)

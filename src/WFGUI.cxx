@@ -6085,9 +6085,11 @@ void WFGUI::SetVBias(double temp) {
     double VdepGainRegion = GetGainRegionVdepletion();
 
     //  VBias=temp;
-    if (VFROMDOP == 1) VBias = temp;
-    else VBias = temp - VdepGainRegion;
-    if (VBias < 0) cout << "Warning: underdepleted sensor" << endl;
+  VBias = temp - VdepGainRegion;
+  if (VBias < 0) {
+    cout << "Warning: underdepleted sensor" << endl;
+  }
+
 }
 
 //////////////////////////////////////////////////////////////////////////////////////
